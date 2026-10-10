@@ -8,16 +8,18 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Class Command">
   <meta name="description" content="A touch-first classroom agenda, timer and CHAMPS dashboard.">
-  <title>Class Command · Teaching dashboard</title>
+  <title>Class Command Classic · iPad Fit</title>
   <style>
     :root { color-scheme: dark; --bg:#0b1220; --panel:#162338; --panel2:#1c2c43; --stroke:#31435d; --muted:#aabbd3; --bright:#f7faff; --blue:#93b5ff; --indigo:#7297ef; --mint:#b8e4b5; --red:#ffb0a8; --shadow:0 12px 45px rgba(0,0,0,.22); }
     * { box-sizing:border-box; }
     html { height:100%; }
+    body { overflow:hidden; }
+    .fitted-app { position:absolute;top:0;left:0;transform-origin:top left;overflow:auto;overflow-x:hidden;overscroll-behavior:contain; }
     body { margin:0; min-height:100%; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:var(--bright); background:var(--bg); -webkit-font-smoothing:antialiased; }
     button,input,textarea,select { font:inherit; }
     button { cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
     button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible { outline:3px solid #e9d18f; outline-offset:3px; }
-    .screen { width:100%; min-height:100dvh; padding:clamp(12px,1.5vw,22px) clamp(12px,1.8vw,28px) calc(105px + env(safe-area-inset-bottom)); display:flex;flex-direction:column;gap:clamp(11px,1.4vh,18px);max-width:1920px;margin:0 auto; }
+    .screen { width:100%; min-height:100%; padding:clamp(12px,1.5vw,22px) clamp(12px,1.8vw,28px) calc(105px + env(safe-area-inset-bottom)); display:flex;flex-direction:column;gap:clamp(11px,1.4vh,18px);max-width:1920px;margin:0 auto; }
     .topline { display:flex;align-items:center;gap:16px;justify-content:space-between;min-height:50px; }
     .brand-row { display:flex;align-items:center;gap:12px;min-width:0; }
     .brand-icon { width:43px;height:43px; flex:none;border-radius:13px;display:grid;place-items:center;background:#233e64;color:#c0dcff;font-size:24px;font-weight:900; }
@@ -82,6 +84,12 @@
     .dockbtn.warn {background:#34543c;border-color:#608267;color:#e4ffe8;}
     .dockbtn:disabled {opacity:.35;cursor:not-allowed;}
     .dockbtn.settings {background:#2b3545;color:#d6e2f3;}
+    .dockbtn.compact {min-height:46px;padding:0 10px;font-size:14px;}
+    .dockbtn.fit-active {background:#294e55;border-color:#79cbb8;color:#e2fff6;}
+    .size-cluster {gap:5px;}
+    .size-cluster .dockbtn {touch-action:manipulation;}
+    .size-hint {font-size:11px;opacity:.85;}
+
     .level {display:flex;align-items:center;gap:5px;}
     .level-label {color:#a3b9d3;font-weight:800;font-size:12px;margin:0 3px;white-space:nowrap;}
     .levelbtn {min-width:39px;height:48px;border:1px solid #465a76;background:#1c2b40;color:#d9e9ff;font-weight:900;font-size:20px;border-radius:9px;}
@@ -125,10 +133,20 @@
       .dockbtn{font-size:14px;padding:0 10px;}
       .levelbtn{min-width:33px;height:46px;}
       .level-label{display:none;}
+      .dock-inner{gap:7px;}
+      .dock-cluster{gap:5px;}
+      .dockbtn.compact{padding:0 8px;min-height:44px;font-size:13px;}
+
     }
     @media (max-width:950px) {
       .champs-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
       .champ{min-height:81px;}
+    }
+    @media (max-width:950px) and (min-width:741px) {
+      .dock-inner {gap:4px;}
+      .dockbtn {font-size:12px;padding:0 7px;min-height:43px;}
+      .dockbtn.compact {padding:0 7px;min-height:42px;}
+      .levelbtn {min-width:29px;height:41px;}
     }
     @media (max-width:740px) {
       .screen{padding-bottom:178px;}
@@ -138,6 +156,8 @@
       .digits{font-size:70px;}
       .champs-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
       .dock-inner{display:grid;grid-template-columns:1fr;gap:7px;}
+      .size-cluster {justify-content:center;}
+
       .dock-cluster{justify-content:center;}
       .dockbtn{min-height:43px;flex:1;}
       .levelbtn{height:41px;min-width:47px;flex:1;}
@@ -149,11 +169,12 @@
   </style>
 </head>
 <body>
+  <div class="fitted-app" id="fittedApp">
   <main class="screen" id="screen">
     <div class="topline">
       <div class="brand-row">
         <div class="brand-icon" aria-hidden="true">⌁</div>
-        <div><div class="kicker">Teaching dashboard</div><div class="appname">CLASS COMMAND <span style="font-size:.5em;color:#95b4d4;vertical-align:middle">v1</span></div></div>
+        <div><div class="kicker">Teaching dashboard</div><div class="appname">CLASS COMMAND <span style="font-size:.5em;color:#95b4d4;vertical-align:middle">Classic · Fit</span></div></div>
       </div>
       <div class="meta"><div class="date-line" id="today"></div><div class="clock" id="clock"></div></div>
     </div>
@@ -202,12 +223,18 @@
         <button class="levelbtn" data-voice="3">3</button>
         <button class="levelbtn" data-voice="4">4</button>
       </div>
+      <div class="dock-cluster size-cluster" role="group" aria-label="Dashboard size">
+        <button class="dockbtn compact" id="sizeDown" aria-label="Make dashboard smaller" title="Make dashboard smaller">A−</button>
+        <button class="dockbtn compact settings" id="fitScreen" aria-label="Automatically fit dashboard to screen" title="Fit dashboard to iPad screen">Fit</button>
+        <button class="dockbtn compact" id="sizeUp" aria-label="Make dashboard larger" title="Make dashboard larger">A+</button>
+      </div>
       <div class="dock-cluster">
         <button class="dockbtn settings" id="focusToggle" title="Toggle simplified display">Focus</button>
         <button class="dockbtn settings" id="openSetup">⚙ Setup</button>
       </div>
     </div>
   </nav>
+  </div><!-- fittedApp: student display and fixed teaching toolbar -->
   <div class="glass" id="glass" aria-hidden="true">
     <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
       <div class="drawer-top"><div><div id="drawerTitle" class="drawer-title">Set up your lesson</div><div class="drawer-sub">Edits are saved on this device as you type.</div></div><button class="softbtn" id="closeSetupTop">✕ Close</button></div>
@@ -229,7 +256,7 @@
       const makeStep=(name,directions,minutes,voice,help,move,participation,success)=>({name,directions,minutes,voice,help,move,participation,success});
       const SAMPLE=()=>({
         title:'U.S. Government',subtitle:'Unit 3 · State & Local Government',index:0,
-        settings:{autoStart:true,showAgenda:true,showChamps:true,showTimer:true,showClock:true,showNext:true,simple:false},
+        settings:{autoStart:true,showAgenda:true,showChamps:true,showTimer:true,showClock:true,showNext:true,simple:false,autoFit:true,uiScale:1},
         steps:[
           makeStep('Bellringer','Read the short excerpt. Answer the opening questions in your notebook.',10,0,'Raise your hand','Stay seated','Work independently','Get started right away'),
           makeStep('Mini-Lesson','How does federalism divide government power? Follow along with the examples.',15,0,'Raise your hand','Stay seated','Listen and take notes','Show your thinking'),
@@ -246,6 +273,63 @@
       function cleanData(raw){const r=raw&&typeof raw==='object'?raw:SAMPLE(),d=SAMPLE();return {title:String(r.title||d.title).slice(0,90),subtitle:String(r.subtitle??d.subtitle).slice(0,150),index:Math.max(0,Math.trunc(Number(r.index)||0)),steps:Array.isArray(r.steps)&&r.steps.length?r.steps.slice(0,30).map(cleanStep):d.steps,settings:{...d.settings,...(r.settings||{})}};}
       function retrieve(){try {const raw=localStorage.getItem(KEY);return raw?cleanData(JSON.parse(raw)):SAMPLE()}catch(e){return SAMPLE()}}
       let data=retrieve();data.index=clamp(data.index,0,data.steps.length-1);
+      data.settings.autoFit=data.settings.autoFit!==false;
+      data.settings.uiScale=clamp(Number(data.settings.uiScale)||1,.6,1.15);
+      let appliedScale=1, fitFrame=0;
+      // The fitted viewport contains both the dashboard and the fixed teaching dock.
+      // Scale the whole surface to the iPad's *visible* viewport, keeping tap targets
+      // aligned even when an HDMI display letterboxes the iPad's native aspect ratio.
+      function viewportSize(){
+        const v=window.visualViewport;
+        return {width:Math.max(320,Math.floor(v?Math.min(window.innerWidth,v.width):window.innerWidth)),
+                height:Math.max(320,Math.floor(v?Math.min(window.innerHeight,v.height):window.innerHeight))};
+      }
+      function applyViewportScale(scale,view){
+        const root=el('fittedApp');
+        root.style.width=`${view.width/scale}px`;
+        root.style.height=`${view.height/scale}px`;
+        root.style.transform=`scale(${scale})`;
+        appliedScale=scale;
+      }
+      function updateFit(){
+        const view=viewportSize();
+        if(data.settings.autoFit){
+          // Choose the largest comfortable scale with the entire dashboard visible.
+          // Wider logical layout at smaller scales can also keep CHAMPS on one row.
+          for(let n=100;n>=60;n-=2){
+            const scale=n/100;
+            applyViewportScale(scale,view);
+            const main=el('screen');
+            const toolbar=document.querySelector('.dock');
+            if(main.scrollHeight<=view.height/scale+1.5 &&
+               main.scrollWidth<=view.width/scale+1.5 &&
+               toolbar.scrollWidth<=view.width/scale+1.5){break;}
+          }
+        }else{
+          applyViewportScale(clamp(data.settings.uiScale,.6,1.15),view);
+        }
+        const fit=el('fitScreen');
+        fit.classList.toggle('fit-active',data.settings.autoFit);
+        fit.setAttribute('aria-pressed',String(data.settings.autoFit));
+        fit.textContent=data.settings.autoFit?'✓ Fit':'Fit';
+        fit.title=`${data.settings.autoFit?'Automatic':'Manual'} size: ${Math.round(appliedScale*100)}%. Tap to fit screen.`;
+      }
+      function requestFit(){
+        cancelAnimationFrame(fitFrame);
+        fitFrame=requestAnimationFrame(updateFit);
+      }
+      function manualSize(delta){
+        data.settings.uiScale=clamp(Math.round((appliedScale+delta)*100)/100,.6,1.15);
+        data.settings.autoFit=false;
+        persist();requestFit();
+        notice(`Display size: ${Math.round(data.settings.uiScale*100)}%`);
+      }
+      function restoreAutoFit(){
+        data.settings.autoFit=true;
+        persist();requestFit();
+        notice('Auto-fit enabled');
+      }
+
       let timer={seconds:data.steps[data.index].minutes*60,running:false,endsAt:null};
       try {const rt=JSON.parse(localStorage.getItem(KEY+'-timer')||'null');if(rt&&rt.index===data.index&&Number.isFinite(rt.seconds)){timer.seconds=clamp(rt.seconds,0,10800);if(rt.running&&Number.isFinite(rt.endsAt)){const left=Math.max(0,Math.ceil((rt.endsAt-Date.now())/1000));timer.seconds=left;timer.running=left>0;timer.endsAt=timer.running?rt.endsAt:null;}}}catch(e){}
       function persist(){try{localStorage.setItem(KEY,JSON.stringify(data));localStorage.setItem(KEY+'-timer',JSON.stringify({...timer,index:data.index}));}catch(e){ /* local preview may not grant storage */ }}
@@ -269,7 +353,7 @@
         el('agendaSection').style.display=data.settings.showAgenda?'':'none';el('champsSection').style.display=data.settings.showChamps?'':'none';el('timerPanel').style.display=data.settings.showTimer?'':'none';el('clock').style.display=data.settings.showClock?'':'none';el('today').style.display=data.settings.showClock?'':'none';el('nextActivity').style.display=data.settings.showNext?'':'none';
         el('screen').classList.toggle('simple',!!data.settings.simple);el('focusToggle').textContent=data.settings.simple?'Full view':'Focus';
         if(!data.settings.showTimer){document.querySelector('.stage').style.gridTemplateColumns='1fr'}else{document.querySelector('.stage').style.gridTemplateColumns=''}
-        renderAgenda();renderChamps();renderTimer();renderClock();}
+        renderAgenda();renderChamps();renderTimer();renderClock();requestFit();}
       function chooseStep(index){index=clamp(index,0,data.steps.length-1);if(index===data.index)return;data.index=index;timer={seconds:current().minutes*60,running:!!data.settings.autoStart,endsAt:data.settings.autoStart?Date.now()+current().minutes*60000:null};persist();renderScreen();notice(current().name);}
       function adjustTime(change){const n=clamp(secondsLeft()+change,0,10800);timer.seconds=n;if(timer.running){timer.endsAt=Date.now()+n*1000;if(n===0){timer.running=false;timer.endsAt=null}}persist();renderTimer();}
       function toggleTimer(){if(timer.running){timer.seconds=secondsLeft();timer.running=false;timer.endsAt=null;}else {if(secondsLeft()===0)timer.seconds=current().minutes*60;timer.running=true;timer.endsAt=Date.now()+timer.seconds*1000;}persist();renderTimer();}
@@ -290,6 +374,9 @@
         <div class="form-section">Quick presentation options</div>
         <label class="checkrow"><input type="checkbox" data-setting="autoStart" ${data.settings.autoStart?'checked':''}>Automatically start each activity's timer</label>
         <div class="fieldrow"><div><label class="checkrow"><input type="checkbox" data-setting="showAgenda" ${data.settings.showAgenda?'checked':''}>Show agenda</label><label class="checkrow"><input type="checkbox" data-setting="showChamps" ${data.settings.showChamps?'checked':''}>Show CHAMPS</label><label class="checkrow"><input type="checkbox" data-setting="showNext" ${data.settings.showNext?'checked':''}>Show up next</label></div><div><label class="checkrow"><input type="checkbox" data-setting="showTimer" ${data.settings.showTimer?'checked':''}>Show timer</label><label class="checkrow"><input type="checkbox" data-setting="showClock" ${data.settings.showClock?'checked':''}>Show clock</label></div></div>
+        <div class="form-section">Display size / projector</div>
+        <label class="checkrow"><input type="checkbox" data-setting="autoFit" ${data.settings.autoFit?'checked':''}>Auto-fit the dashboard to the iPad screen</label>
+        <p class="save-hint">Use A− / A+ on the bottom bar for a manual size, or tap ✓ Fit to show the entire dashboard. Best in landscape orientation. HDMI mirroring may still add side bars when the board has a different screen shape.</p>
         <div class="form-section">Your lesson agenda</div><div class="save-hint" style="margin-bottom:14px">Change any field during class. To change the active step, tap it on the projected agenda.</div>
         <div id="editorSteps">${data.steps.map(editorStep).join('')}</div>
         <div class="addrow"><button class="softbtn" data-add="custom">+ Blank activity</button><button class="softbtn" data-add="group">+ Group discussion</button><button class="softbtn" data-add="individual">+ Independent work</button></div>
@@ -316,6 +403,13 @@
       document.querySelectorAll('[data-voice]').forEach(b=>b.addEventListener('click',()=>setVoice(Number(b.dataset.voice))));
       el('champsGrid').addEventListener('click',e=>{const b=e.target.closest('[data-champ]');if(b)cycle(b.dataset.champ);});
       el('focusToggle').addEventListener('click',()=>{data.settings.simple=!data.settings.simple;persist();renderScreen();notice(data.settings.simple?'Focus display':'Full display');});
+      el('sizeDown').addEventListener('click',()=>manualSize(-.05));
+      el('sizeUp').addEventListener('click',()=>manualSize(.05));
+      el('fitScreen').addEventListener('click',restoreAutoFit);
+      window.addEventListener('resize',requestFit);
+      window.addEventListener('orientationchange',requestFit);
+      if(window.visualViewport)window.visualViewport.addEventListener('resize',requestFit);
+
       el('openSetup').addEventListener('click',openEditor);el('closeSetup').addEventListener('click',closeEditor);el('closeSetupTop').addEventListener('click',closeEditor);
       el('glass').addEventListener('click',e=>{if(e.target===el('glass'))closeEditor()});
       document.addEventListener('keydown',e=>{if(e.key==='Escape'&&el('glass').classList.contains('open'))closeEditor();});
