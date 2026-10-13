@@ -221,6 +221,20 @@
     .sign-hint{font-size:10px;color:var(--muted);}
     .simple .extras-row{display:none!important;}
     @media(max-width:600px){.extras-row{flex-direction:column;}}
+  
+    .fullscreen-setup{display:none;position:fixed;right:15px;top:12px;z-index:17;background:var(--panel);color:var(--bright);border:1px solid var(--blue);border-radius:12px;padding:10px 14px;font-weight:800;min-height:44px;}
+    .fullscreen-active .fullscreen-setup{display:block;}
+    .timer-top-button{border:1px solid var(--stroke);border-radius:9px;background:var(--panel2);padding:8px 12px;min-height:40px;font-size:14px;}
+    .timer-entry{display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:center;font-size:12px;}
+    .timer-entry input{width:150px;min-height:40px;border:1px solid var(--stroke);border-radius:9px;background:var(--panel2);color:var(--bright);padding:8px;}
+  
+    /* Keep the current activity and timer together on tablet screens. */
+    .focus,.timer-panel{padding-top:clamp(19px,2.25vw,34px);}
+    .focus-top,.timer-heading{min-height:40px;align-items:center;}
+    @media(min-width:600px){
+      .stage,.simple .stage{grid-template-columns:minmax(0,1.38fr) minmax(230px,.88fr);align-items:stretch;}
+      .timer-entry input{width:125px;}
+    }
   </style>
 </head>
 <body>
@@ -248,8 +262,9 @@
         <div class="focus-footer" id="nextActivity"><div><span class="next-label">Up next</span><span class="next-name" id="nextName"></span></div><span style="color:#9eb6d7">→</span></div>
       </section>
       <section class="timer-panel" id="timerPanel" aria-label="Activity countdown timer">
-        <div class="timer-heading"><span>Activity timer</span><span class="timer-status" id="timerStatus">Ready</span></div>
+        <div class="timer-heading"><span>Activity timer</span><button class="timer-status timer-top-button" id="timerStatus" type="button" aria-label="Start timer">▶ Start</button></div>
         <div class="digits" id="digits" role="timer" aria-label="Time remaining">10:00</div>
+        <form id="timerEntry" class="timer-entry"><label for="typedTime">Set time</label><input id="typedTime" type="text" inputmode="decimal" autocomplete="off" placeholder="Minutes or M:SS" aria-label="Timer duration in minutes or minutes colon seconds" maxlength="10"><button class="softbtn" type="submit">Set</button></form>
         <div class="timer-buttons">
           <button class="softbtn" id="timeMinus" data-time="-60" aria-label="Subtract one minute">−1 min</button>
           <button class="softbtn" id="timePlus" data-time="60" aria-label="Add one minute">+1 min</button>
@@ -285,11 +300,6 @@
         <button class="levelbtn" data-voice="3">3</button>
         <button class="levelbtn" data-voice="4">4</button>
       </div>
-      <div class="dock-cluster size-cluster" data-toolbar-group="size" role="group" aria-label="Dashboard size">
-        <button class="dockbtn compact" id="sizeDown" aria-label="Make dashboard smaller" title="Make dashboard smaller">A−</button>
-        <button class="dockbtn compact settings" id="fitScreen" aria-label="Automatically fit dashboard to screen" title="Fit dashboard to iPad screen">Fit</button>
-        <button class="dockbtn compact" id="sizeUp" aria-label="Make dashboard larger" title="Make dashboard larger">A+</button>
-      </div>
       <div class="dock-cluster" data-toolbar-group="tools">
         <button class="dockbtn settings utility" id="focusToggle" title="Toggle simplified display">Focus</button>
         <button class="dockbtn pngbtn utility" id="savePng" title="Save a clean image of the classroom board">↓ PNG</button>
@@ -300,6 +310,7 @@
     </div>
   </nav>
     <button class="controls-tab" id="showDock" aria-label="Show the bottom teaching controls">▴ Show controls</button>
+    <button class="fullscreen-setup" id="fullscreenSetup" type="button">⚙ Setup</button>
     <button class="presentation-exit" id="exitPresentation" aria-label="Exit presentation view">Exit presentation view ↙</button>
   </div><!-- fittedApp: student display and fixed teaching toolbar -->
   <div class="glass" id="glass" aria-hidden="true">
@@ -436,7 +447,8 @@
         }else{
           applyViewportScale(clamp(data.settings.uiScale,.6,1.15),view);
         }
-        const fit=el('fitScreen');
+        const fit=document.querySelector('[data-zoom="fit"]');
+        if(!fit)return;
         fit.classList.toggle('fit-active',data.settings.autoFit);
         fit.setAttribute('aria-pressed',String(data.settings.autoFit));
         fit.textContent=data.settings.autoFit?'✓ Fit':'Fit';
@@ -545,22 +557,23 @@
       function secondsLeft(){return timer.running?Math.max(0,Math.ceil((timer.endsAt-Date.now())/1000)):timer.seconds;}
       function tick(){if(timer.running&&secondsLeft()<=0){timer.running=false;timer.seconds=0;timer.endsAt=null;persist();notice('Time is up!')}renderTimer();}
       function formatTime(s){s=Math.max(0,Math.ceil(s));return `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`}
-      function renderTimer(){const s=secondsLeft();el('digits').textContent=formatTime(s);el('digits').classList.toggle('finished',s===0);el('timerStatus').textContent=timer.running?'Running':s===0?'Time is up':'Paused / ready';el('timerStatus').classList.toggle('finished',s===0);el('toggleTimer').textContent=timer.running?'Ⅱ Pause':'▶ Start';}
+      function renderTimer(){const s=secondsLeft();el('digits').textContent=formatTime(s);el('digits').classList.toggle('finished',s===0);el('timerStatus').textContent=timer.running?'Ⅱ Pause':'▶ Start';el('timerStatus').setAttribute('aria-label',timer.running?'Pause timer':'Start timer');el('timerStatus').setAttribute('aria-pressed',String(timer.running));el('timerStatus').classList.toggle('finished',s===0);el('toggleTimer').textContent=timer.running?'Ⅱ Pause':'▶ Start';}
       function renderClock(){const now=new Date();el('clock').textContent=new Intl.DateTimeFormat('en-US',{hour:'numeric',minute:'2-digit'}).format(now);el('today').textContent=new Intl.DateTimeFormat('en-US',{weekday:'short',month:'short',day:'numeric'}).format(now);}
       // Button preferences are per browser: each teacher can configure their own teaching bar.
       function renderControls(){
         const c=data.settings.controls;
-        const show={prev:'prevStep',next:'nextStep',start:'toggleTimer',sizeDown:'sizeDown',fit:'fitScreen',sizeUp:'sizeUp',
+        const show={prev:'prevStep',next:'nextStep',start:'toggleTimer',
           focus:'focusToggle',png:'savePng',fullscreen:'fullScreenBtn',minus:'timeMinus',plus:'timePlus',plusFive:'timePlusFive',reset:'resetTimer'};
         for(const [key,id] of Object.entries(show))el(id).style.display=c.show[key]?'':'none';
         document.querySelector('[data-toolbar-group="voice"]').style.display=c.show.voice?'':'none';
-        const groups={navigation:['prev','next'],timer:['start'],size:['sizeDown','fit','sizeUp'],tools:['focus','png','fullscreen']};
+        const groups={navigation:['prev','next'],timer:['start'],tools:['focus','png','fullscreen']};
         for(const [group,keys] of Object.entries(groups)){
           const node=document.querySelector(`[data-toolbar-group="${group}"]`);
           if(group!=='tools')node.style.display=keys.some(key=>c.show[key])?'':'none';
           // Keep Setup visible no matter what, even if the other tools are hidden.
         }
-        c.order.forEach((name,i)=>document.querySelector(`[data-toolbar-group="${name}"]`).style.order=i);
+        c.order.forEach((name,i)=>{const group=document.querySelector(`[data-toolbar-group="${name}"]`);if(group)group.style.order=i;});
+        el('fittedApp').classList.toggle('fullscreen-active',!!(document.fullscreenElement||document.webkitFullscreenElement||presentationMode));
         for(const [key,id,prefix] of [['minus','timeMinus','−'],['plus','timePlus','+'],['plusFive','timePlusFive','+']]){
           const minutes=c.increments[key],b=el(id);b.dataset.time=String(minutes*60*(key==='minus'?-1:1));
           b.textContent=prefix+minutes+' min';b.setAttribute('aria-label',`${key==='minus'?'Subtract':'Add'} ${minutes} minutes`);
@@ -618,6 +631,11 @@
         if(!data.settings.showTimer){document.querySelector('.stage').style.gridTemplateColumns='1fr'}else{document.querySelector('.stage').style.gridTemplateColumns=''}
         renderAgenda();renderChamps();renderExtras();renderTimer();renderClock();requestFit();}
       function chooseStep(index){index=clamp(index,0,data.steps.length-1);if(index===data.index)return;data.index=index;timer={seconds:current().minutes*60,running:!!data.settings.autoStart,endsAt:data.settings.autoStart?Date.now()+current().minutes*60000:null};persist();renderScreen();notice(current().name);}
+      function parseTimerInput(value){const text=String(value).trim();let seconds;
+        if(/^\d{1,3}:[0-5]\d$/.test(text)){const [m,s]=text.split(':').map(Number);seconds=m*60+s;}
+        else if(/^\d+(?:\.\d+)?$/.test(text))seconds=Math.round(Number(text)*60);else return null;
+        return Number.isFinite(seconds)&&seconds>=1&&seconds<=10800?seconds:null;
+      }
       function adjustTime(change){const n=clamp(secondsLeft()+change,0,10800);timer.seconds=n;if(timer.running){timer.endsAt=Date.now()+n*1000;if(n===0){timer.running=false;timer.endsAt=null}}persist();renderTimer();}
       function toggleTimer(){if(timer.running){timer.seconds=secondsLeft();timer.running=false;timer.endsAt=null;}else {if(secondsLeft()===0)timer.seconds=current().minutes*60;timer.running=true;timer.endsAt=Date.now()+timer.seconds*1000;}persist();renderTimer();}
       function resetTimer(){timer.seconds=current().minutes*60;timer.running=false;timer.endsAt=null;persist();renderTimer();notice('Timer reset to '+current().minutes+' minutes');}
@@ -743,13 +761,14 @@
         <label class="checkrow"><input type="checkbox" data-setting="autoStart" ${data.settings.autoStart?'checked':''}>Automatically start each activity's timer</label>
         <div class="fieldrow"><div><label class="checkrow"><input type="checkbox" data-setting="showAgenda" ${data.settings.showAgenda?'checked':''}>Show agenda</label><label class="checkrow"><input type="checkbox" data-setting="showChamps" ${data.settings.showChamps?'checked':''}>Show CHAMPS</label><label class="checkrow"><input type="checkbox" data-setting="showNext" ${data.settings.showNext?'checked':''}>Show up next</label></div><div><label class="checkrow"><input type="checkbox" data-setting="showTimer" ${data.settings.showTimer?'checked':''}>Show timer</label><label class="checkrow"><input type="checkbox" data-setting="showClock" ${data.settings.showClock?'checked':''}>Show clock</label></div></div>
         <div class="form-section">Display size / projector</div>
+        <div class="addrow"><button class="softbtn" data-zoom="down">A− Smaller</button><button class="softbtn" data-zoom="fit">✓ Fit</button><button class="softbtn" data-zoom="up">A+ Larger</button></div>
         <label class="checkrow"><input type="checkbox" data-setting="autoFit" ${data.settings.autoFit?'checked':''}>Auto-fit the dashboard to the iPad screen</label>
-        <p class="save-hint">Use A− / A+ on the bottom bar for a manual size, or tap ✓ Fit to show the entire dashboard. Best in landscape orientation. HDMI mirroring may still add side bars when the board has a different screen shape.</p>
+        <p class="save-hint">Use A− / A+ here for a manual size, or tap ✓ Fit to show the entire dashboard. Best in landscape orientation. HDMI mirroring may still add side bars when the board has a different screen shape.</p>
         <div class="form-section">Customize buttons</div>
         <p class="save-hint">Choose what appears in the bottom teaching toolbar, rearrange groups, set quick timer amounts, and rename shortcuts. Setup is always available so you cannot lock yourself out.</p>
         <details class="settings-details" data-panel="toolbar" ${editorPanelState.toolbar?'open':''}><summary>Bottom toolbar · visibility and order</summary><div class="control-fields">
-        ${data.settings.controls.order.map((group,i)=>`<div class="custom-toolbar-row"><strong style="font-size:13px">${GROUP_TITLES[group]}</strong><span class="tinyrow"><button class="minibtn" data-groupmove="${group},-1" ${i===0?'disabled':''} aria-label="Move ${GROUP_TITLES[group]} left">←</button><button class="minibtn" data-groupmove="${group},1" ${i===data.settings.controls.order.length-1?'disabled':''} aria-label="Move ${GROUP_TITLES[group]} right">→</button></span></div>
-        ${Object.entries(BUTTON_NAMES).filter(([key])=>({navigation:['prev','next'],timer:['start'],voice:['voice'],size:['sizeDown','fit','sizeUp'],tools:['focus','png','fullscreen']}[group]||[]).includes(key)).map(([key,label])=>`<label class="checkrow"><input type="checkbox" data-control="${key}" ${data.settings.controls.show[key]?'checked':''}>${label}</label>`).join('')}`).join('')}
+        ${data.settings.controls.order.filter(group=>group!=='size').map((group,i)=>`<div class="custom-toolbar-row"><strong style="font-size:13px">${GROUP_TITLES[group]}</strong><span class="tinyrow"><button class="minibtn" data-groupmove="${group},-1" ${i===0?'disabled':''} aria-label="Move ${GROUP_TITLES[group]} left">←</button><button class="minibtn" data-groupmove="${group},1" ${i===data.settings.controls.order.length-1?'disabled':''} aria-label="Move ${GROUP_TITLES[group]} right">→</button></span></div>
+        ${Object.entries(BUTTON_NAMES).filter(([key])=>({navigation:['prev','next'],timer:['start'],voice:['voice'],tools:['focus','png','fullscreen']}[group]||[]).includes(key)).map(([key,label])=>`<label class="checkrow"><input type="checkbox" data-control="${key}" ${data.settings.controls.show[key]?'checked':''}>${label}</label>`).join('')}`).join('')}
         <div class="save-hint">The Setup button stays on the bar. An entire hidden group disappears automatically.</div></div></details>
         <details class="settings-details" data-panel="timer" ${editorPanelState.timer?'open':''}><summary>Timer buttons · amounts and visibility</summary><div class="control-fields">
         ${[['minus','Subtract time'],['plus','Add time'],['plusFive','Add extra time']].map(([key,label])=>`<div class="fieldrow" style="align-items:center"><label class="checkrow"><input type="checkbox" data-control="${key}" ${data.settings.controls.show[key]?'checked':''}>${label}</label><label class="fieldwrap"><span class="form-label">Minutes</span><input class="field" type="number" min="1" max="30" data-increment="${key}" value="${data.settings.controls.increments[key]}"></label></div>`).join('')}
@@ -769,7 +788,7 @@
         body.scrollTop=scroll;
       }
       function openEditor(){renderEditor();el('glass').classList.add('open');el('glass').setAttribute('aria-hidden','false');el('closeSetupTop').focus();}
-      function closeEditor(){el('glass').classList.remove('open');el('glass').setAttribute('aria-hidden','true');(toolbarHidden?el('showDock'):el('openSetup')).focus();}
+      function closeEditor(){el('glass').classList.remove('open');el('glass').setAttribute('aria-hidden','true');((document.fullscreenElement||document.webkitFullscreenElement||presentationMode)?el('fullscreenSetup'):toolbarHidden?el('showDock'):el('openSetup')).focus();}
       function addStep(type){if(data.steps.length>=30){notice('30 activities is the limit');return;}const presets={
         custom:makeStep('New activity','Enter directions in Setup.',10,1,HELP[0],MOVE[0],PARTICIPATION[0],SUCCESS[0]),
         group:makeStep('Table Discussion','Talk through the prompt with your group. Be ready to share.',12,2,HELP[1],MOVE[1],PARTICIPATION[1],SUCCESS[2]),
@@ -795,9 +814,10 @@
       el('hideDock').addEventListener('click',()=>{setToolbarHidden(true);notice('Tap Show controls to reopen');});
       el('showDock').addEventListener('click',()=>setToolbarHidden(false));
       el('lessonPicker').addEventListener('change',e=>chooseLesson(e.target.value));
-      el('sizeDown').addEventListener('click',()=>manualSize(-.05));
-      el('sizeUp').addEventListener('click',()=>manualSize(.05));
-      el('fitScreen').addEventListener('click',restoreAutoFit);
+      el('fullscreenSetup').addEventListener('click',openEditor);
+      el('timerStatus').addEventListener('click',toggleTimer);
+      el('timerEntry').addEventListener('submit',e=>{e.preventDefault();const n=parseTimerInput(el('typedTime').value);if(n===null){notice('Enter minutes (5 or 1.5) or M:SS (5:30), up to 180 minutes');el('typedTime').focus();return;}timer={seconds:n,running:false,endsAt:null};persist();renderTimer();el('typedTime').value='';notice('Timer set to '+formatTime(n));});
+      el('drawerBody').addEventListener('click',e=>{const b=e.target.closest('[data-zoom]');if(!b)return;if(b.dataset.zoom==='fit')restoreAutoFit();else manualSize(b.dataset.zoom==='down'?-.05:.05);});
       window.addEventListener('resize',requestFit);
       window.addEventListener('orientationchange',requestFit);
       if(window.visualViewport)window.visualViewport.addEventListener('resize',requestFit);
