@@ -200,7 +200,7 @@
     @media (max-width:400px){.appname{font-size:16px}.brand-icon{height:36px;width:36px}.clock{font-size:16px}.lesson-title{font-size:23px}.pill{display:none}.fieldrow{grid-template-columns:1fr}.step{flex-basis:70vw}}
     @media (prefers-reduced-motion:reduce) {*,*:before,*:after{transition-duration:.01ms!important;animation-duration:.01ms!important;scroll-behavior:auto!important;}}
   
-    .champs-grid {grid-template-columns:repeat(7,minmax(0,1fr));}
+    .champs-grid {grid-template-columns:repeat(6,minmax(0,1fr));}
     .step,.champ,.champ.clickable,.softbtn,.dockbtn,.lesson-picker,.field {background:var(--panel2);}
     .step.active,.levelbtn.selected {background:var(--active,#2a4475);border-color:var(--blue);}
     .champs,.drawer,.dock {background:var(--panel);}
@@ -208,7 +208,20 @@
     .champ[data-champ="voice"][style] .champ-name {color:inherit;}
     @media(max-width:900px){.champs-grid{grid-template-columns:repeat(4,minmax(0,1fr));}}
     @media(max-width:600px){.champs-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
-</style>
+
+    [hidden]{display:none!important;}
+    .extras-row{display:flex;gap:10px;align-items:stretch;}
+    .extra-card{flex:1;min-width:0;border:1px solid var(--stroke);border-radius:15px;background:var(--panel);color:var(--bright);padding:14px 18px;}
+    .extra-heading{display:block;font-size:11px;font-weight:900;letter-spacing:1.6px;color:var(--blue);}
+    .extra-card p{margin:9px 0 0;font-size:clamp(15px,1.6vw,22px);line-height:1.3;white-space:pre-line;overflow-wrap:anywhere;}
+    .technology-sign{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;text-align:center;box-shadow:inset 0 0 18px #0005;}
+    .technology-sign strong{font-size:clamp(14px,1.6vw,21px);}
+    .technology-icon{font-size:31px;line-height:1;color:#ffce76;text-shadow:0 0 12px #ffb53788;}
+    .technology-sign[data-state="0"] .technology-icon{color:#ffb3a7;text-shadow:0 0 12px #ff705088;}
+    .sign-hint{font-size:10px;color:var(--muted);}
+    .simple .extras-row{display:none!important;}
+    @media(max-width:600px){.extras-row{flex-direction:column;}}
+  </style>
 </head>
 <body>
   <div class="fitted-app" id="fittedApp">
@@ -248,6 +261,11 @@
     <section class="champs" id="champsSection" aria-label="CHAMPS activity expectations">
       <div class="champs-head"><div class="champs-title">CHAMPS <span style="font-weight:450;color:#8ea7c8">/ Current expectations</span></div><div class="champs-help">Tap a card to cycle its expectation</div></div>
       <div class="champs-grid" id="champsGrid"></div>
+    </section>
+    <section id="extrasRow" class="extras-row" aria-label="Optional classroom signs" hidden>
+      <button id="technologySign" class="extra-card technology-sign" hidden type="button"><span class="extra-heading">TECHNOLOGY</span><span id="technologyIcon" class="technology-icon" aria-hidden="true"></span><strong id="technologyText"></strong><span class="sign-hint">Tap to change</span></button>
+      <article id="quoteCard" class="extra-card" hidden><span class="extra-heading">QUOTE OF THE DAY</span><p id="quoteText"></p></article>
+      <article id="remindersCard" class="extra-card" hidden><span class="extra-heading">REMINDERS</span><p id="remindersText"></p></article>
     </section>
   </main>
   <nav class="dock" aria-label="Teaching quick controls">
@@ -331,7 +349,7 @@
       }
       const SAMPLE=()=>({
         title:'U.S. Government',subtitle:'Unit 3 · State & Local Government',index:0,
-        settings:{autoStart:true,showAgenda:true,showChamps:true,showTimer:true,showClock:true,showNext:true,simple:false,autoFit:true,uiScale:1,theme:'blue',stoplight:false,controls:DEFAULT_CONTROLS()},
+        settings:{autoStart:true,showAgenda:true,showChamps:true,showTimer:true,showClock:true,showNext:true,simple:false,autoFit:true,uiScale:1,theme:'blue',stoplight:false,showTechnology:false,showQuote:false,showReminders:false,quote:'',reminders:'',controls:DEFAULT_CONTROLS()},
         steps:[
           makeStep('Bellringer','Read the short excerpt. Answer the opening questions in your notebook.',10,0,'Raise your hand','Stay seated','Work independently','Get started right away'),
           makeStep('Mini-Lesson','How does federalism divide government power? Follow along with the examples.',15,0,'Raise your hand','Stay seated','Listen and take notes','Show your thinking'),
@@ -580,23 +598,31 @@
         el('progressLabel').textContent=`${data.index+1} of ${data.steps.length}`;}
       function champsCards(){const s=current(),v=s.voice;return [
         ['C','Conversation',`Level ${v} · ${CONVERSATIONS[v]}`,'voice'],
-        ['H','Help',s.help,'help'],['A','Activity',s.name,'none'],['M','Movement',s.move,'move'],['P','Participation',s.participation,'participation'],['S','Success',s.success,'success'],['T','Technology',TECHNOLOGY[s.technology||0],'technology']
+        ['H','Help',s.help,'help'],['A','Activity',s.name,'none'],['M','Movement',s.move,'move'],['P','Participation',s.participation,'participation'],['S','Success',s.success,'success']
       ]}
       function renderChamps(){el('champsGrid').innerHTML=champsCards().map(([letter,name,value,key])=>`<button class="champ ${key!=='none'?'clickable':''}" ${key==='none'?'disabled':''} data-champ="${key}" ${key==='voice'&&data.settings.stoplight?`style="background:${stopColor(current().voice)};color:${current().voice===1?'#201a00':'#fff'}"`:''} aria-label="${escapeHTML(name)}: ${escapeHTML(value)}${key!=='none'?'. Tap to change.':''}"><span class="champ-top"><span class="letter">${letter}</span><span class="champ-name">${name}</span></span><span class="champ-value">${escapeHTML(value)}</span></button>`).join('');
         document.querySelectorAll('[data-voice]').forEach(btn=>{const yes=Number(btn.dataset.voice)===current().voice;btn.classList.toggle('selected',yes);btn.setAttribute('aria-pressed',String(yes));btn.style.background=yes&&data.settings.stoplight?stopColor(current().voice):'';btn.style.color=yes&&data.settings.stoplight?(current().voice===1?'#201a00':'#fff'):''});}
+      function renderExtras(){
+        const st=data.settings,n=current().technology||0;
+        el('extrasRow').hidden=!(st.showTechnology||st.showQuote||st.showReminders);
+        el('technologySign').hidden=!st.showTechnology;el('quoteCard').hidden=!st.showQuote;el('remindersCard').hidden=!st.showReminders;
+        el('technologySign').dataset.state=n;el('technologyIcon').textContent=['▱ ✕','▱ ✓','▱ + ♫'][n];
+        el('technologyText').textContent=TECHNOLOGY[n];el('technologySign').setAttribute('aria-label','Technology: '+TECHNOLOGY[n]+'. Tap to change.');
+        el('quoteText').textContent=st.quote||'Add a quote in Setup.';el('remindersText').textContent=st.reminders||'Add reminders in Setup.';
+      }
       function renderScreen(){applyTheme();renderLessonPicker();const s=current();el('lessonTitle').textContent=data.title;el('lessonSub').textContent=data.subtitle;el('currentName').textContent=s.name;el('currentDirections').textContent=s.directions||'Your directions will appear here.';el('activityNumber').textContent=`ACTIVITY ${data.index+1} / ${data.steps.length}`;
         el('nextName').textContent=data.index+1<data.steps.length?data.steps[data.index+1].name:'Lesson complete';
         el('prevStep').disabled=data.index===0;el('nextStep').disabled=data.index===data.steps.length-1;
         el('agendaSection').style.display=data.settings.showAgenda?'':'none';el('champsSection').style.display=data.settings.showChamps?'':'none';el('timerPanel').style.display=data.settings.showTimer?'':'none';el('clock').style.display=data.settings.showClock?'':'none';el('today').style.display=data.settings.showClock?'':'none';el('nextActivity').style.display=data.settings.showNext?'':'none';
         el('screen').classList.toggle('simple',!!data.settings.simple);renderControls();
         if(!data.settings.showTimer){document.querySelector('.stage').style.gridTemplateColumns='1fr'}else{document.querySelector('.stage').style.gridTemplateColumns=''}
-        renderAgenda();renderChamps();renderTimer();renderClock();requestFit();}
+        renderAgenda();renderChamps();renderExtras();renderTimer();renderClock();requestFit();}
       function chooseStep(index){index=clamp(index,0,data.steps.length-1);if(index===data.index)return;data.index=index;timer={seconds:current().minutes*60,running:!!data.settings.autoStart,endsAt:data.settings.autoStart?Date.now()+current().minutes*60000:null};persist();renderScreen();notice(current().name);}
       function adjustTime(change){const n=clamp(secondsLeft()+change,0,10800);timer.seconds=n;if(timer.running){timer.endsAt=Date.now()+n*1000;if(n===0){timer.running=false;timer.endsAt=null}}persist();renderTimer();}
       function toggleTimer(){if(timer.running){timer.seconds=secondsLeft();timer.running=false;timer.endsAt=null;}else {if(secondsLeft()===0)timer.seconds=current().minutes*60;timer.running=true;timer.endsAt=Date.now()+timer.seconds*1000;}persist();renderTimer();}
       function resetTimer(){timer.seconds=current().minutes*60;timer.running=false;timer.endsAt=null;persist();renderTimer();notice('Timer reset to '+current().minutes+' minutes');}
       function setVoice(v){current().voice=clamp(v,0,4);persist();renderChamps();notice('Conversation: Level '+current().voice);}
-      function cycle(key){if(key==='technology'){current().technology=((current().technology||0)+1)%3;persist();renderChamps();notice(TECHNOLOGY[current().technology]);requestFit();return;}if(key==='none')return;if(key==='voice'){setVoice((current().voice+1)%5);return;}const sets={help:HELP,move:MOVE,participation:PARTICIPATION,success:SUCCESS};const opts=sets[key];if(!opts)return;const pos=opts.indexOf(current()[key]);current()[key]=opts[(pos+1)%opts.length];persist();renderChamps();notice(current()[key]);}
+      function cycle(key){if(key==='technology'){current().technology=((current().technology||0)+1)%3;persist();renderExtras();notice(TECHNOLOGY[current().technology]);requestFit();return;}if(key==='none')return;if(key==='voice'){setVoice((current().voice+1)%5);return;}const sets={help:HELP,move:MOVE,participation:PARTICIPATION,success:SUCCESS};const opts=sets[key];if(!opts)return;const pos=opts.indexOf(current()[key]);current()[key]=opts[(pos+1)%opts.length];persist();renderChamps();notice(current()[key]);}
       function templateOptions(values,selected){return values.map(v=>`<option value="${escapeHTML(v)}" ${String(v)===String(selected)?'selected':''}>${escapeHTML(v)}</option>`).join('')}
       function editorStep(s,i){return `<div class="editstep" data-editstep="${i}">
         <div class="editstep-head"><div class="editstep-title">${i+1}. ${escapeHTML(s.name)}</div><div class="tinyrow"><button class="minibtn" data-move="${i},-1" aria-label="Move activity up">↑</button><button class="minibtn" data-move="${i},1" aria-label="Move activity down">↓</button><button class="minibtn danger" data-delete="${i}" aria-label="Delete activity">Delete</button></div></div>
@@ -615,7 +641,8 @@
         const steps=data.steps,k=data.index,s=steps[k];
         const W=1600,margin=52,columns=Math.min(4,steps.length),rows=Math.ceil(steps.length/columns),rh=106;
         const agendaTop=245,activityTop=agendaTop+rows*rh+25,champsTop=activityTop+270;
-        const H=Math.max(930,champsTop+174+55),c=document.createElement('canvas');c.width=W;c.height=H;
+        const extrasTop=data.settings.showChamps?champsTop+174:champsTop,hasExtras=data.settings.showTechnology||data.settings.showQuote||data.settings.showReminders;
+        const H=Math.max(930,extrasTop+(hasExtras?220:0)+55),c=document.createElement('canvas');c.width=W;c.height=H;
         const ctx=c.getContext('2d');if(!ctx)throw new Error('Canvas is not supported');
         const font='-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
         function rect(x,y,w,h,color,r=0,line){ctx.beginPath();if(r&&ctx.roundRect)ctx.roundRect(x,y,w,h,r);else ctx.rect(x,y,w,h);ctx.fillStyle=color;ctx.fill();if(line){ctx.strokeStyle=line;ctx.lineWidth=2;ctx.stroke();}}
@@ -659,8 +686,8 @@
         if(data.settings.showChamps){
           rect(margin,champsTop,W-2*margin,151,'#142339',18,'#39506c');
           txt('CHAMPS',margin+18,champsTop+11,17,'#abcaff',900);
-          const cards=[['C','Conversation',`Level ${s.voice}: ${CONVERSATIONS[s.voice]}`],['H','Help',s.help],['A','Activity',s.name],['M','Movement',s.move],['P','Participation',s.participation],['S','Success',s.success],['T','Technology',TECHNOLOGY[s.technology||0]]];
-          const sw=(W-2*margin-32)/7;
+          const cards=[['C','Conversation',`Level ${s.voice}: ${CONVERSATIONS[s.voice]}`],['H','Help',s.help],['A','Activity',s.name],['M','Movement',s.move],['P','Participation',s.participation],['S','Success',s.success]];
+          const sw=(W-2*margin-32)/6;
           cards.forEach(([letter,label,value],i)=>{
             const x=margin+16+i*sw;rect(x,champsTop+39,sw-7,100,i===0&&data.settings.stoplight?stopColor(s.voice):(THEMES[data.settings.theme]||THEMES.blue)[3],10);
             rect(x+9,champsTop+50,30,30,'#426ba0',7);txt(letter,x+17,champsTop+53,19,'#fff',900);
@@ -668,7 +695,12 @@
             wrap(value,x+10,champsTop+89,sw-26,17,3,14,i===0&&data.settings.stoplight&&s.voice===1?'#201a00':'#fff',800);
           });
         }
-        txt('Class Command  •  Saved classroom agenda',margin,H-31,14,'#8da6c5',600);
+        const extras=[];
+        if(data.settings.showTechnology)extras.push(['TECHNOLOGY',TECHNOLOGY[s.technology||0]]);
+        if(data.settings.showQuote)extras.push(['QUOTE OF THE DAY',data.settings.quote||'Add a quote in Setup.']);
+        if(data.settings.showReminders)extras.push(['REMINDERS',data.settings.reminders||'Add reminders in Setup.']);
+        extras.forEach(([heading,value],i)=>{const ew=(W-2*margin-16*(extras.length-1))/extras.length,x=margin+i*(ew+16);rect(x,extrasTop,ew,205,(THEMES[data.settings.theme]||THEMES.blue)[2],15,'#39506c');txt(heading,x+18,extrasTop+16,16,(THEMES[data.settings.theme]||THEMES.blue)[4],900);wrap(value,x+18,extrasTop+52,ew-36,25,5,20,'#fff',750);});
+        txt('Class Command  •  Saved classroom agenda' ,margin,H-31,14,'#8da6c5',600);
         return c;
       }
       async function savePNG(){
@@ -698,7 +730,14 @@
         <div class="form-section">Theme and expectations</div>
         <label class="fieldwrap" style="display:block"><span class="form-label">Color theme for this lesson</span><select class="field" data-theme="true">${Object.entries(THEMES).map(([key,t])=>`<option value="${key}" ${(data.settings.theme||'blue')===key?'selected':''}>${t[0]}</option>`).join('')}</select></label>
         <label class="checkrow"><input type="checkbox" data-setting="stoplight" ${data.settings.stoplight?'checked':''}>Use stoplight conversation colors</label>
-        <p class="save-hint">Red: level 0, no talking. Yellow: level 1, whisper. Green: levels 2–4, talking at the displayed level. Tap Technology to cycle its three expectations.</p>
+        <p class="save-hint">Red: level 0, no talking. Yellow: level 1, whisper. Green: levels 2–4, talking at the displayed level. Enable the optional Technology sign below to cycle its three expectations.</p>
+        <div class="form-section">Optional fourth row</div>
+        <p class="save-hint">All extras start off. Enable only what you need for this lesson; disabled cards take up no space.</p>
+        <label class="checkrow"><input type="checkbox" data-setting="showTechnology" ${data.settings.showTechnology?'checked':''}>Show Technology cabin sign</label>
+        <label class="checkrow"><input type="checkbox" data-setting="showQuote" ${data.settings.showQuote?'checked':''}>Show Quote of the Day</label>
+        <label class="fieldwrap" style="display:block"><span class="form-label">Quote (include attribution if desired)</span><textarea class="field" maxlength="350" data-extra="quote">${escapeHTML(data.settings.quote||'')}</textarea></label>
+        <label class="checkrow"><input type="checkbox" data-setting="showReminders" ${data.settings.showReminders?'checked':''}>Show Reminders</label>
+        <label class="fieldwrap" style="display:block"><span class="form-label">Reminders</span><textarea class="field" maxlength="450" data-extra="reminders">${escapeHTML(data.settings.reminders||'')}</textarea></label>
         <div class="form-section">Quick presentation options</div>
         <label class="checkrow"><input type="checkbox" data-appearance="toolbarHidden" ${toolbarHidden?'checked':''}>Keep bottom control bar collapsed (tap “Show controls” to reopen)</label>
         <label class="checkrow"><input type="checkbox" data-setting="autoStart" ${data.settings.autoStart?'checked':''}>Automatically start each activity's timer</label>
@@ -747,6 +786,7 @@
       document.querySelectorAll('[data-voice]').forEach(b=>b.addEventListener('click',()=>setVoice(Number(b.dataset.voice))));
       el('champsGrid').addEventListener('click',e=>{const b=e.target.closest('[data-champ]');if(b)cycle(b.dataset.champ);});
       el('focusToggle').addEventListener('click',()=>{data.settings.simple=!data.settings.simple;persist();renderScreen();notice(data.settings.simple?'Focus display':'Full display');});
+      el('technologySign').addEventListener('click',()=>cycle('technology'));
       el('savePng').addEventListener('click',savePNG);
       el('fullScreenBtn').addEventListener('click',fullScreen);
       el('exitPresentation').addEventListener('click',()=>{presentationMode=false;updatePresentation();});
@@ -771,6 +811,7 @@
         }
 
         if(t.dataset.buttonlabel){data.settings.controls.labels[t.dataset.buttonlabel]=t.value.slice(0,26);persist();renderControls();requestFit();return;}
+        if(t.dataset.extra){data.settings[t.dataset.extra]=t.value.slice(0,t.maxLength);persist();renderExtras();requestFit();return;}
         if(t.dataset.general){data[t.dataset.general]=t.value.slice(0,t.maxLength>0?t.maxLength:150);persist();renderScreen();}
         else if(t.dataset.stepfield){const idx=Number(t.dataset.index),f=t.dataset.stepfield;if(!data.steps[idx])return;
           if(f==='minutes'){if(t.value===''||!Number.isFinite(Number(t.value)))return;data.steps[idx].minutes=clamp(Math.round(Number(t.value)),1,180)}
