@@ -235,7 +235,23 @@
       .stage,.simple .stage{grid-template-columns:minmax(0,1.38fr) minmax(230px,.88fr);align-items:stretch;}
       .timer-entry input{width:125px;}
     }
-  </style>
+  
+    #boardGrid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px;align-items:stretch;}
+    #boardGrid>[data-panel]{position:relative;min-width:0;margin:0;}
+    #boardGrid .extra-card{width:auto;}
+    #boardGrid .champs-grid{grid-template-columns:repeat(auto-fit,minmax(115px,1fr));}
+    .layout-tools,.resize-grip{display:none;}
+    .layout-editing .layout-tools{display:flex;gap:4px;flex-wrap:wrap;grid-column:1/-1;align-self:stretch;margin-bottom:8px;}
+    .layout-tools button{min-height:40px;border:1px solid var(--blue);background:var(--panel2);color:var(--bright);border-radius:8px;padding:5px 9px;font-size:12px;}
+    [data-drag],.resize-grip{touch-action:none;}
+    .layout-editing .resize-grip{display:block;position:absolute;bottom:0;right:0;padding:8px;color:var(--blue);font-size:26px;cursor:nwse-resize;}
+    .layout-editing [data-panel]{outline:2px dashed var(--blue);padding-bottom:40px;}
+    .layout-editing [data-panel]>*:not(.layout-tools):not(.resize-grip){pointer-events:none;}
+    .layout-selected{outline:4px solid #ffd675!important;}
+    .finish-layout{position:fixed;top:12px;left:12px;z-index:30;background:#d6f5db;color:#153b22;border:0;border-radius:12px;padding:12px;font-weight:900;}
+    .simple #agendaSection,.simple #champsSection,.simple #technologySign,.simple #quoteCard,.simple #remindersCard{display:none!important;}
+    @media(max-width:599px){#boardGrid>[data-panel]{grid-column:span 12!important;}}
+</style>
 </head>
 <body>
   <div class="fitted-app" id="fittedApp">
@@ -256,7 +272,7 @@
       <div class="agenda" id="agenda"></div>
     </section>
     <div class="stage">
-      <section class="focus" aria-label="Current activity">
+      <section class="focus" id="activityPanel" aria-label="Current activity">
         <div><div class="focus-top"><span class="focus-tag">● Now in progress</span><span class="focus-count" id="activityNumber"></span></div>
           <h1 class="focus-name" id="currentName"></h1><div class="focus-directions" id="currentDirections"></div></div>
         <div class="focus-footer" id="nextActivity"><div><span class="next-label">Up next</span><span class="next-name" id="nextName"></span></div><span style="color:#9eb6d7">→</span></div>
@@ -310,6 +326,7 @@
     </div>
   </nav>
     <button class="controls-tab" id="showDock" aria-label="Show the bottom teaching controls">▴ Show controls</button>
+    <button id="finishLayout" class="finish-layout" hidden type="button">✓ Done editing layout</button>
     <button class="fullscreen-setup" id="fullscreenSetup" type="button">⚙ Setup</button>
     <button class="presentation-exit" id="exitPresentation" aria-label="Exit presentation view">Exit presentation view ↙</button>
   </div><!-- fittedApp: student display and fixed teaching toolbar -->
@@ -435,14 +452,16 @@
         if(data.settings.autoFit){
           // Choose the largest comfortable scale with the entire dashboard visible.
           // Wider logical layout at smaller scales can also keep CHAMPS on one row.
-          for(let n=100;n>=50;n-=2){
+          for(let n=100;n>=5;n-=1){
             const scale=n/100;
             applyViewportScale(scale,view);
             const main=el('screen');
             const toolbar=document.querySelector('.dock');
+            const dockVisible=!toolbarHidden&&!presentationMode;
+            main.style.paddingBottom=(dockVisible?toolbar.getBoundingClientRect().height/scale+20:64)+'px';
             if(main.scrollHeight<=view.height/scale+1.5 &&
                main.scrollWidth<=view.width/scale+1.5 &&
-               (toolbarHidden||toolbar.scrollWidth<=view.width/scale+1.5)){break;}
+               (!dockVisible||toolbar.scrollWidth<=view.width/scale+1.5)){break;}
           }
         }else{
           applyViewportScale(clamp(data.settings.uiScale,.6,1.15),view);
@@ -594,7 +613,7 @@
         if(document.fullscreenElement||document.webkitFullscreenElement){
           try{await (document.exitFullscreen?document.exitFullscreen():document.webkitExitFullscreen());}catch(e){notice('Could not exit full screen');}return;
         }
-        const root=el('fittedApp');
+        const root=document.documentElement;
         try{
           if(root.requestFullscreen)await root.requestFullscreen({navigationUI:'hide'});
           else if(root.webkitRequestFullscreen)await root.webkitRequestFullscreen();
@@ -617,18 +636,50 @@
         document.querySelectorAll('[data-voice]').forEach(btn=>{const yes=Number(btn.dataset.voice)===current().voice;btn.classList.toggle('selected',yes);btn.setAttribute('aria-pressed',String(yes));btn.style.background=yes&&data.settings.stoplight?stopColor(current().voice):'';btn.style.color=yes&&data.settings.stoplight?(current().voice===1?'#201a00':'#fff'):''});}
       function renderExtras(){
         const st=data.settings,n=current().technology||0;
-        el('extrasRow').hidden=!(st.showTechnology||st.showQuote||st.showReminders);
+        
         el('technologySign').hidden=!st.showTechnology;el('quoteCard').hidden=!st.showQuote;el('remindersCard').hidden=!st.showReminders;
         el('technologySign').dataset.state=n;el('technologyIcon').textContent=['▱ ✕','▱ ✓','▱ + ♫'][n];
         el('technologyText').textContent=TECHNOLOGY[n];el('technologySign').setAttribute('aria-label','Technology: '+TECHNOLOGY[n]+'. Tap to change.');
         el('quoteText').textContent=st.quote||'Add a quote in Setup.';el('remindersText').textContent=st.reminders||'Add reminders in Setup.';
+      }
+      const PANEL_IDS=['agendaSection','activityPanel','timerPanel','champsSection','technologySign','quoteCard','remindersCard'];
+      const PANEL_NAMES=['Agenda','Current activity','Timer','CHAMPS','Technology','Quote','Reminders'];
+      let layoutEditing=false;
+      function layoutConfig(){const raw=data.settings.layout||{},order=Array.isArray(raw.order)?raw.order.filter(x=>PANEL_IDS.includes(x)):[];
+        return {order:[...new Set([...order,...PANEL_IDS])],sizes:raw.sizes&&typeof raw.sizes==='object'?raw.sizes:{}};}
+      function initializeLayout(){
+        const grid=document.createElement('div');grid.id='boardGrid';el('screen').insertBefore(grid,el('agendaSection'));
+        PANEL_IDS.forEach((id,i)=>{const node=el(id);node.dataset.panel=id;grid.append(node);
+          const tools=document.createElement('div');tools.className='layout-tools';tools.innerHTML=`<button type="button" data-drag="${id}" aria-label="Drag ${PANEL_NAMES[i]}">⠿ ${PANEL_NAMES[i]}</button><button type="button" data-layoutmove="${id},-1" aria-label="Move ${PANEL_NAMES[i]} earlier">←</button><button type="button" data-layoutmove="${id},1" aria-label="Move ${PANEL_NAMES[i]} later">→</button><button type="button" data-layoutsize="${id}" aria-label="Change ${PANEL_NAMES[i]} width">Width</button>`;
+          node.prepend(tools);const grip=document.createElement('span');grip.className='resize-grip';grip.dataset.resize=id;grip.textContent='◢';grip.setAttribute('aria-label','Drag to resize '+PANEL_NAMES[i]);node.append(grip);
+        });
+        document.querySelector('.stage').remove();el('extrasRow').remove();
+      }
+      function applyLayout(){const cfg=layoutConfig();cfg.order.forEach(id=>{const n=el(id),size=cfg.sizes[id]||{},fallback=id==='activityPanel'?7:id==='timerPanel'?5:['technologySign','quoteCard','remindersCard'].includes(id)?4:12;
+          el('boardGrid').append(n);n.style.gridColumn='span '+clamp(Math.round(Number(size.w)||fallback),3,12);n.style.minHeight=(Number(size.h)>0?clamp(Number(size.h),100,650)+'px':'');});
+        el('fittedApp').classList.toggle('layout-editing',layoutEditing);el('finishLayout').hidden=!layoutEditing;
+      }
+      function saveLayout(cfg){data.settings.layout=cfg;persist();applyLayout();requestFit();}
+      function movePanel(id,delta){const cfg=layoutConfig(),i=cfg.order.indexOf(id),j=clamp(i+delta,0,cfg.order.length-1);[cfg.order[i],cfg.order[j]]=[cfg.order[j],cfg.order[i]];saveLayout(cfg);}
+      function beginLayout(){layoutEditing=true;closeEditor();applyLayout();requestFit();notice('Drag a panel handle; drag its corner to resize. Tap Done when finished.');}
+      function parseLayoutPointer(e){const handle=e.target.closest('[data-drag],[data-resize]');if(!layoutEditing||!handle)return;
+        e.preventDefault();const id=handle.dataset.drag||handle.dataset.resize,node=el(id),startX=e.clientX,startY=e.clientY,rect=node.getBoundingClientRect(),scale=appliedScale;
+        handle.setPointerCapture(e.pointerId);node.classList.add('layout-selected');
+        function preview(ev){if(handle.dataset.drag){node.style.transform=`translate(${(ev.clientX-startX)/scale}px,${(ev.clientY-startY)/scale}px)`;node.style.zIndex='25';}else{node.style.outline='4px solid #ffd675';}}
+        handle.addEventListener('pointermove',preview);
+        function up(ev){handle.removeEventListener('pointermove',preview);node.style.transform='';node.style.zIndex='';node.style.outline='';handle.removeEventListener('pointerup',up);handle.removeEventListener('pointercancel',cancel);node.classList.remove('layout-selected');
+          if(handle.dataset.resize){const cfg=layoutConfig(),grid=el('boardGrid').getBoundingClientRect();cfg.sizes[id]={w:clamp(Math.round((rect.width+ev.clientX-startX)/grid.width*12),3,12),h:clamp(Math.round((rect.height+ev.clientY-startY)/scale/20)*20,100,650)};saveLayout(cfg);}
+          else{const target=PANEL_IDS.filter(x=>x!==id&&!el(x).hidden&&getComputedStyle(el(x)).display!=='none').map(x=>{const r=el(x).getBoundingClientRect();return {id:x,d:Math.hypot(ev.clientX-r.x-r.width/2,ev.clientY-r.y-r.height/2)}}).sort((a,b)=>a.d-b.d)[0];if(target&&Math.hypot(ev.clientX-startX,ev.clientY-startY)>12){const cfg=layoutConfig(),a=cfg.order.indexOf(id),b=cfg.order.indexOf(target.id);[cfg.order[a],cfg.order[b]]=[cfg.order[b],cfg.order[a]];saveLayout(cfg);}}
+        }
+        function cancel(){handle.removeEventListener('pointermove',preview);node.style.transform='';node.style.zIndex='';node.style.outline='';handle.removeEventListener('pointerup',up);handle.removeEventListener('pointercancel',cancel);node.classList.remove('layout-selected');}
+        handle.addEventListener('pointerup',up);handle.addEventListener('pointercancel',cancel);
       }
       function renderScreen(){applyTheme();renderLessonPicker();const s=current();el('lessonTitle').textContent=data.title;el('lessonSub').textContent=data.subtitle;el('currentName').textContent=s.name;el('currentDirections').textContent=s.directions||'Your directions will appear here.';el('activityNumber').textContent=`ACTIVITY ${data.index+1} / ${data.steps.length}`;
         el('nextName').textContent=data.index+1<data.steps.length?data.steps[data.index+1].name:'Lesson complete';
         el('prevStep').disabled=data.index===0;el('nextStep').disabled=data.index===data.steps.length-1;
         el('agendaSection').style.display=data.settings.showAgenda?'':'none';el('champsSection').style.display=data.settings.showChamps?'':'none';el('timerPanel').style.display=data.settings.showTimer?'':'none';el('clock').style.display=data.settings.showClock?'':'none';el('today').style.display=data.settings.showClock?'':'none';el('nextActivity').style.display=data.settings.showNext?'':'none';
         el('screen').classList.toggle('simple',!!data.settings.simple);renderControls();
-        if(!data.settings.showTimer){document.querySelector('.stage').style.gridTemplateColumns='1fr'}else{document.querySelector('.stage').style.gridTemplateColumns=''}
+        applyLayout();
         renderAgenda();renderChamps();renderExtras();renderTimer();renderClock();requestFit();}
       function chooseStep(index){index=clamp(index,0,data.steps.length-1);if(index===data.index)return;data.index=index;timer={seconds:current().minutes*60,running:!!data.settings.autoStart,endsAt:data.settings.autoStart?Date.now()+current().minutes*60000:null};persist();renderScreen();notice(current().name);}
       function parseTimerInput(value){const text=String(value).trim();let seconds;
@@ -760,6 +811,9 @@
         <label class="checkrow"><input type="checkbox" data-appearance="toolbarHidden" ${toolbarHidden?'checked':''}>Keep bottom control bar collapsed (tap “Show controls” to reopen)</label>
         <label class="checkrow"><input type="checkbox" data-setting="autoStart" ${data.settings.autoStart?'checked':''}>Automatically start each activity's timer</label>
         <div class="fieldrow"><div><label class="checkrow"><input type="checkbox" data-setting="showAgenda" ${data.settings.showAgenda?'checked':''}>Show agenda</label><label class="checkrow"><input type="checkbox" data-setting="showChamps" ${data.settings.showChamps?'checked':''}>Show CHAMPS</label><label class="checkrow"><input type="checkbox" data-setting="showNext" ${data.settings.showNext?'checked':''}>Show up next</label></div><div><label class="checkrow"><input type="checkbox" data-setting="showTimer" ${data.settings.showTimer?'checked':''}>Show timer</label><label class="checkrow"><input type="checkbox" data-setting="showClock" ${data.settings.showClock?'checked':''}>Show clock</label></div></div>
+        <div class="form-section">Layout and screen fit</div>
+        <div class="addrow"><button class="softbtn" id="editLayout">Edit layout</button><button class="softbtn" id="resetLayout">Reset layout</button></div>
+        <p class="save-hint">Move panels by their handles and resize using the corner grips. Arrow and Width buttons also work by tapping. Layout saves with this lesson. Auto-fit scales every visible panel to the available screen; larger layouts mean smaller text.</p>
         <div class="form-section">Display size / projector</div>
         <div class="addrow"><button class="softbtn" data-zoom="down">A− Smaller</button><button class="softbtn" data-zoom="fit">✓ Fit</button><button class="softbtn" data-zoom="up">A+ Larger</button></div>
         <label class="checkrow"><input type="checkbox" data-setting="autoFit" ${data.settings.autoFit?'checked':''}>Auto-fit the dashboard to the iPad screen</label>
@@ -805,7 +859,7 @@
       document.querySelectorAll('[data-voice]').forEach(b=>b.addEventListener('click',()=>setVoice(Number(b.dataset.voice))));
       el('champsGrid').addEventListener('click',e=>{const b=e.target.closest('[data-champ]');if(b)cycle(b.dataset.champ);});
       el('focusToggle').addEventListener('click',()=>{data.settings.simple=!data.settings.simple;persist();renderScreen();notice(data.settings.simple?'Focus display':'Full display');});
-      el('technologySign').addEventListener('click',()=>cycle('technology'));
+      el('technologySign').addEventListener('click',()=>{if(!layoutEditing)cycle('technology');});
       el('savePng').addEventListener('click',savePNG);
       el('fullScreenBtn').addEventListener('click',fullScreen);
       el('exitPresentation').addEventListener('click',()=>{presentationMode=false;updatePresentation();});
@@ -875,6 +929,11 @@
       el('importFile').addEventListener('change',async e=>{await importBackup(e.target.files[0]);e.target.value='';});
       el('importLibraryFile').addEventListener('change',async e=>{await importLibraryFile(e.target.files[0]);e.target.value='';});
       window.addEventListener('pagehide',persist);
+      initializeLayout();
+      el('finishLayout').addEventListener('click',()=>{layoutEditing=false;applyLayout();requestFit();});
+      el('boardGrid').addEventListener('pointerdown',parseLayoutPointer);
+      el('boardGrid').addEventListener('click',e=>{const move=e.target.closest('[data-layoutmove]'),size=e.target.closest('[data-layoutsize]');if(!layoutEditing)return;if(move){const [id,d]=move.dataset.layoutmove.split(',');movePanel(id,Number(d));}if(size){const cfg=layoutConfig(),id=size.dataset.layoutsize,old=Number((cfg.sizes[id]||{}).w)||Number(el(id).style.gridColumn.split(' ')[1]);cfg.sizes[id]={...(cfg.sizes[id]||{}),w:old>=12?3:Math.min(12,old+3)};saveLayout(cfg);}});
+      el('drawerBody').addEventListener('click',e=>{if(e.target.id==='editLayout')beginLayout();if(e.target.id==='resetLayout'){delete data.settings.layout;persist();applyLayout();requestFit();notice('Default layout restored');}});
       setToolbarHidden(toolbarHidden);renderScreen();persist();setInterval(tick,250);setInterval(renderClock,15000);
     })();
   </script>
