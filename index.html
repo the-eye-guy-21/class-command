@@ -251,7 +251,18 @@
     .finish-layout{position:fixed;top:12px;left:12px;z-index:30;background:#d6f5db;color:#153b22;border:0;border-radius:12px;padding:12px;font-weight:900;}
     .simple #agendaSection,.simple #champsSection,.simple #technologySign,.simple #quoteCard,.simple #remindersCard{display:none!important;}
     @media(max-width:599px){#boardGrid>[data-panel]{grid-column:span 12!important;}}
-</style>
+
+    #boardGrid{position:relative;}
+    .layout-editing #boardGrid{
+      background-image:linear-gradient(to right,rgba(147,181,255,.20) 1px,transparent 1px),linear-gradient(to bottom,rgba(147,181,255,.16) 1px,transparent 1px);
+      background-size:calc((100% + 14px)/12) 20px;
+      outline:1px solid rgba(147,181,255,.35);border-radius:12px;
+    }
+    .layout-editing #boardGrid>[data-panel]{background-color:color-mix(in srgb,var(--panel) 90%,transparent);}
+    .snap-preview{position:absolute;z-index:28;pointer-events:none;border:3px solid #ffd675;border-radius:15px;background:rgba(255,214,117,.16);box-shadow:0 0 0 3px #0b122099,inset 0 0 22px #ffd67533;display:flex;align-items:center;justify-content:center;}
+    .snap-preview span{max-width:95%;padding:8px 12px;background:#ffd675;color:#211800;font-size:14px;line-height:1.3;font-weight:900;border-radius:9px;text-align:center;}
+    @media(max-width:599px){.layout-editing #boardGrid{background-size:100% 20px;}}
+  </style>
 </head>
 <body>
   <div class="fitted-app" id="fittedApp">
@@ -662,17 +673,36 @@
       function saveLayout(cfg){data.settings.layout=cfg;persist();applyLayout();requestFit();}
       function movePanel(id,delta){const cfg=layoutConfig(),i=cfg.order.indexOf(id),j=clamp(i+delta,0,cfg.order.length-1);[cfg.order[i],cfg.order[j]]=[cfg.order[j],cfg.order[i]];saveLayout(cfg);}
       function beginLayout(){layoutEditing=true;closeEditor();applyLayout();requestFit();notice('Drag a panel handle; drag its corner to resize. Tap Done when finished.');}
+      function dropPanelAt(id,x,y){
+        const grid=el('boardGrid').getBoundingClientRect();
+        if(x<grid.left||x>grid.right||y<grid.top||y>grid.bottom)return null;
+        return PANEL_IDS.filter(key=>key!==id&&!el(key).hidden&&getComputedStyle(el(key)).display!=='none')
+          .map(key=>{const r=el(key).getBoundingClientRect();const dx=Math.max(r.left-x,0,x-r.right),dy=Math.max(r.top-y,0,y-r.bottom);return {id:key,d:Math.hypot(dx,dy)};})
+          .sort((a,b)=>a.d-b.d)[0]?.id||null;
+      }
+      function snappedPanelSize(rect,dx,dy,gridWidth,scale){
+        const gap=14,logicalWidth=gridWidth/scale,col=(logicalWidth+gap)/12;
+        const w=clamp(Math.round(((rect.width+dx)/scale+gap)/col),3,12);
+        return {w,h:clamp(Math.round((rect.height+dy)/scale/20)*20,100,650),previewWidth:col*w-gap};
+      }
       function parseLayoutPointer(e){const handle=e.target.closest('[data-drag],[data-resize]');if(!layoutEditing||!handle)return;
-        e.preventDefault();const id=handle.dataset.drag||handle.dataset.resize,node=el(id),startX=e.clientX,startY=e.clientY,rect=node.getBoundingClientRect(),scale=appliedScale;
-        handle.setPointerCapture(e.pointerId);node.classList.add('layout-selected');
-        function preview(ev){if(handle.dataset.drag){node.style.transform=`translate(${(ev.clientX-startX)/scale}px,${(ev.clientY-startY)/scale}px)`;node.style.zIndex='25';}else{node.style.outline='4px solid #ffd675';}}
-        handle.addEventListener('pointermove',preview);
-        function up(ev){handle.removeEventListener('pointermove',preview);node.style.transform='';node.style.zIndex='';node.style.outline='';handle.removeEventListener('pointerup',up);handle.removeEventListener('pointercancel',cancel);node.classList.remove('layout-selected');
-          if(handle.dataset.resize){const cfg=layoutConfig(),grid=el('boardGrid').getBoundingClientRect();cfg.sizes[id]={w:clamp(Math.round((rect.width+ev.clientX-startX)/grid.width*12),3,12),h:clamp(Math.round((rect.height+ev.clientY-startY)/scale/20)*20,100,650)};saveLayout(cfg);}
-          else{const target=PANEL_IDS.filter(x=>x!==id&&!el(x).hidden&&getComputedStyle(el(x)).display!=='none').map(x=>{const r=el(x).getBoundingClientRect();return {id:x,d:Math.hypot(ev.clientX-r.x-r.width/2,ev.clientY-r.y-r.height/2)}}).sort((a,b)=>a.d-b.d)[0];if(target&&Math.hypot(ev.clientX-startX,ev.clientY-startY)>12){const cfg=layoutConfig(),a=cfg.order.indexOf(id),b=cfg.order.indexOf(target.id);[cfg.order[a],cfg.order[b]]=[cfg.order[b],cfg.order[a]];saveLayout(cfg);}}
+        e.preventDefault();const id=handle.dataset.drag||handle.dataset.resize,node=el(id),startX=e.clientX,startY=e.clientY,rect=node.getBoundingClientRect(),scale=appliedScale,grid=el('boardGrid'),gridRect=grid.getBoundingClientRect();
+        const guide=document.createElement('div');guide.className='snap-preview';guide.setAttribute('aria-hidden','true');grid.append(guide);
+        const label=document.createElement('span');guide.append(label);let target=null,moved=false;
+        function showGuide(r,text){guide.hidden=false;guide.style.left=(r.left-gridRect.left)/scale+'px';guide.style.top=(r.top-gridRect.top)/scale+'px';guide.style.width=r.width/scale+'px';guide.style.height=r.height/scale+'px';label.textContent=text;}
+        guide.hidden=true;handle.setPointerCapture(e.pointerId);node.classList.add('layout-selected');
+        function preview(ev){moved=Math.hypot(ev.clientX-startX,ev.clientY-startY)>12;
+          if(handle.dataset.drag){node.style.transform=`translate(${(ev.clientX-startX)/scale}px,${(ev.clientY-startY)/scale}px)`;node.style.zIndex='25';node.style.opacity='.65';target=moved?dropPanelAt(id,ev.clientX,ev.clientY):null;
+            if(target)showGuide(el(target).getBoundingClientRect(),'Release to swap with '+PANEL_NAMES[PANEL_IDS.indexOf(target)]);else guide.hidden=true;
+          }else{const size=snappedPanelSize(rect,ev.clientX-startX,ev.clientY-startY,gridRect.width,scale);showGuide({left:rect.left,top:rect.top,width:size.previewWidth*scale,height:size.h*scale},size.w+' / 12 columns · '+size.h+' px');}
         }
-        function cancel(){handle.removeEventListener('pointermove',preview);node.style.transform='';node.style.zIndex='';node.style.outline='';handle.removeEventListener('pointerup',up);handle.removeEventListener('pointercancel',cancel);node.classList.remove('layout-selected');}
-        handle.addEventListener('pointerup',up);handle.addEventListener('pointercancel',cancel);
+        function cleanup(){handle.removeEventListener('pointermove',preview);handle.removeEventListener('pointerup',up);handle.removeEventListener('pointercancel',cancel);handle.removeEventListener('lostpointercapture',cancel);node.style.transform='';node.style.zIndex='';node.style.opacity='';node.classList.remove('layout-selected');guide.remove();}
+        function up(ev){preview(ev);cleanup();
+          if(handle.dataset.resize&&moved){const size=snappedPanelSize(rect,ev.clientX-startX,ev.clientY-startY,gridRect.width,scale),cfg=layoutConfig();cfg.sizes[id]={w:size.w,h:size.h};saveLayout(cfg);}
+          else if(handle.dataset.drag&&moved&&target){const cfg=layoutConfig(),a=cfg.order.indexOf(id),b=cfg.order.indexOf(target);[cfg.order[a],cfg.order[b]]=[cfg.order[b],cfg.order[a]];saveLayout(cfg);notice('Panel snapped into place');}
+        }
+        function cancel(){cleanup();}
+        handle.addEventListener('pointermove',preview);handle.addEventListener('pointerup',up);handle.addEventListener('pointercancel',cancel);handle.addEventListener('lostpointercapture',cancel);
       }
       function renderScreen(){applyTheme();renderLessonPicker();const s=current();el('lessonTitle').textContent=data.title;el('lessonSub').textContent=data.subtitle;el('currentName').textContent=s.name;el('currentDirections').textContent=s.directions||'Your directions will appear here.';el('activityNumber').textContent=`ACTIVITY ${data.index+1} / ${data.steps.length}`;
         el('nextName').textContent=data.index+1<data.steps.length?data.steps[data.index+1].name:'Lesson complete';
@@ -813,7 +843,7 @@
         <div class="fieldrow"><div><label class="checkrow"><input type="checkbox" data-setting="showAgenda" ${data.settings.showAgenda?'checked':''}>Show agenda</label><label class="checkrow"><input type="checkbox" data-setting="showChamps" ${data.settings.showChamps?'checked':''}>Show CHAMPS</label><label class="checkrow"><input type="checkbox" data-setting="showNext" ${data.settings.showNext?'checked':''}>Show up next</label></div><div><label class="checkrow"><input type="checkbox" data-setting="showTimer" ${data.settings.showTimer?'checked':''}>Show timer</label><label class="checkrow"><input type="checkbox" data-setting="showClock" ${data.settings.showClock?'checked':''}>Show clock</label></div></div>
         <div class="form-section">Layout and screen fit</div>
         <div class="addrow"><button class="softbtn" id="editLayout">Edit layout</button><button class="softbtn" id="resetLayout">Reset layout</button></div>
-        <p class="save-hint">Move panels by their handles and resize using the corner grips. Arrow and Width buttons also work by tapping. Layout saves with this lesson. Auto-fit scales every visible panel to the available screen; larger layouts mean smaller text.</p>
+        <p class="save-hint">Drag a handle onto a panel: the gold outline shows where it will snap. Release to swap positions. The background grid and resize preview show snapped sizes. Arrow and Width buttons also work by tapping. Layout saves with this lesson. Auto-fit scales every visible panel to the available screen; larger layouts mean smaller text.</p>
         <div class="form-section">Display size / projector</div>
         <div class="addrow"><button class="softbtn" data-zoom="down">A− Smaller</button><button class="softbtn" data-zoom="fit">✓ Fit</button><button class="softbtn" data-zoom="up">A+ Larger</button></div>
         <label class="checkrow"><input type="checkbox" data-setting="autoFit" ${data.settings.autoFit?'checked':''}>Auto-fit the dashboard to the iPad screen</label>
