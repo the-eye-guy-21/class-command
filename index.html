@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Class Command">
   <meta name="description" content="A touch-first classroom agenda, timer and CHAMPS dashboard.">
-  <title>Class Command Classic · Studio</title>
+  <title>Class Command Classic · Studio 1.2</title>
   <style>
     :root { color-scheme: dark; --bg:#0b1220; --panel:#162338; --panel2:#1c2c43; --stroke:#31435d; --muted:#aabbd3; --bright:#f7faff; --blue:#93b5ff; --indigo:#7297ef; --mint:#b8e4b5; --red:#ffb0a8; --shadow:0 12px 45px rgba(0,0,0,.22); }
     * { box-sizing:border-box; }
@@ -121,6 +121,16 @@
     .custom-toolbar-row .checkrow {margin:6px 0;}
     .control-fields {padding:5px 0 14px;}
     .control-fields .field {min-height:40px;}
+    .setup-live-help{font-size:12px;color:#b6cfec;line-height:1.5;margin:5px 0 13px;}
+    .setup-live-group{background:#122239;border:1px solid #3f5b79;border-radius:12px;padding:12px;margin:10px 0;}
+    .setup-live-head{font-size:12px;font-weight:850;text-transform:uppercase;letter-spacing:.7px;color:#c6dafe;margin:0 0 8px;}
+    .setup-live-buttons{display:flex;gap:7px;flex-wrap:wrap;align-items:center;}
+    .setup-live-buttons button{min-height:44px;touch-action:manipulation;}
+    .setup-live-buttons button[aria-pressed="true"]{background:#537ab9;border-color:#9ec6ff;color:#fff;box-shadow:inset 0 0 0 1px #c8ddff;}
+    .setup-live-status{font-size:12px;color:#bed1e9;margin:7px 0 0;}
+    .setup-live-buttons .is-stoplight[aria-pressed="true"]{background:#3b8066;border-color:#9ee5c6;color:white;}
+    .setup-live-buttons button:disabled{opacity:.38;}
+
 
 
     .level {display:flex;align-items:center;gap:5px;}
@@ -233,6 +243,12 @@
     .stoplight-on [data-voice].selected{box-shadow:0 0 0 3px white,0 0 0 5px #9ab6d6;}
     .stoplight-on .champ[data-champ="voice"]{border-color:#e9c45c;}
     .stoplight-toggle[aria-pressed="true"]{background:#8751ba;border-color:#cd99f1;color:white;}
+    /* Voice signal follows selected level on both the quick buttons and CHAMPS. */
+    .stoplight-on [data-voice].selected{background:var(--voice-color,#bf404c)!important;border-color:var(--voice-edge,#ffb0b7)!important;color:#fff!important;box-shadow:0 0 0 2px #fff,0 0 0 4px var(--voice-edge,#ffb0b7)!important;}
+    .stoplight-on .champ[data-champ="voice"]{background:color-mix(in srgb,var(--voice-color,#ae3d47) 35%,var(--cc-card))!important;border-color:var(--voice-edge,#ffb0b7)!important;box-shadow:inset 0 0 0 1px var(--voice-edge,#ffb0b7);}
+    .stoplight-on .champ[data-champ="voice"] .letter{background:var(--voice-color,#ad4350)!important;color:#fff!important;}
+    .stoplight-on .champ[data-champ="voice"] .champ-value{color:#fff;}
+
     .photo-sheet{display:none;border:1px solid var(--cc-line);border-radius:20px;padding:22px 24px;box-shadow:var(--shadow);}
     .photo-mode .photo-sheet{display:block!important;}
     .photo-mode .agenda-section,.photo-mode .stage,.photo-mode #champsSection,.photo-mode #fourthRow{display:none!important;}
@@ -254,7 +270,18 @@
     .widget-card{border:1px solid var(--cc-line);border-radius:12px;padding:13px;min-width:0;}
     .widget-label{font-size:12px;color:var(--cc-accent);font-weight:900;text-transform:uppercase;letter-spacing:1px;}
     .widget-value{font-size:calc(17px * var(--cc-type-widgets));line-height:1.3;font-weight:680;margin-top:7px;white-space:pre-line;overflow-wrap:anywhere;}
-    .widget-tech{display:inline-block;border-radius:9px;padding:7px 11px;background:#2f4e72;}
+    .widget-tech{display:inline-flex;gap:10px;align-items:center;width:100%;border-radius:12px;padding:8px 10px;background:#213d5a;border:1px solid #547b9a;color:#fff;text-align:left;min-height:67px;}
+    .widget-tech .seatbelt-icon{width:49px;height:49px;flex:none;border-radius:10px;background:#10273d;border:1px solid #748ca8;display:grid;place-items:center;}
+    .widget-tech .seatbelt-icon svg{width:37px;height:37px;stroke:#e8f7ff;}
+    .widget-tech .tech-copy{flex:1;min-width:0;font-size:calc(17px * var(--cc-type-widgets));font-weight:850;line-height:1.23;overflow-wrap:anywhere;}
+    .widget-tech .tech-hint{display:block;font-size:11px;font-weight:600;opacity:.75;margin-top:3px;}
+    .widget-tech[data-tech="closed"]{background:#68502d;border-color:#d3a45f;}
+    .widget-tech[data-tech="bag"]{background:#61353e;border-color:#dc8e9c;}
+    .widget-tech[data-tech="out"]{background:#215b50;border-color:#78d6bb;}
+    .widget-tech[data-tech="earbuds"]{background:#294b76;border-color:#86b7f0;}
+    .widget-tech:focus-visible{outline:3px solid white;outline-offset:3px;}
+    .widget-tech:active{transform:scale(.98);}
+
     @media(max-width:800px){.fourth-row{grid-template-columns:1fr}.photo-task{padding:12px}}
     .form-subtitle{color:#a9bede;font-size:13px;margin:-7px 0 14px;line-height:1.5;}
     .setup-block{margin-top:13px;}
@@ -293,6 +320,46 @@
     .photo-mode.toolbar-hidden .screen{padding-bottom:55px;}
     button,select,input[type="checkbox"],.settings-details summary{touch-action:manipulation;}
 
+  
+    /* CLASS COMMAND STUDIO 1.1 · snap-to-grid, movable and resizable panels. */
+    .layout-custom .screen{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));align-content:start;column-gap:12px;row-gap:12px;}
+    .layout-custom .topline,.layout-custom .lesson-row,.layout-custom .photo-sheet{grid-column:1/-1;}
+    .layout-custom .stage{display:contents!important;}
+    .photo-mode.layout-custom .stage{display:none!important;} /* Photo Mode must hide live activity and timer, even in a custom layout. */
+    .layout-custom .layout-window{position:relative;min-width:0;max-width:none!important;align-self:stretch;}
+    .layout-custom .agenda-section{min-width:0;}
+    .layout-custom .agenda{flex-wrap:wrap;overflow-x:visible;}
+    .layout-custom .step{flex:1 1 min(180px,35%);max-width:none;}
+    .layout-custom .focus{justify-content:space-between;}
+    .layout-custom .timer-panel{min-width:0;}
+    .layout-custom .champs-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
+    .layout-custom .champ{min-height:85px;}
+    .layout-custom .fourth-row{grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));}
+    .layout-custom .photo-sheet{order:0;}
+    .layout-edit .layout-window{outline:2px dashed #c5b2ff;outline-offset:3px;user-select:none;-webkit-user-select:none;}
+    .layout-controls{display:none;position:absolute;right:7px;top:7px;z-index:8;gap:5px;align-items:center;background:#101d36ee;border:1px solid #bb9de0;border-radius:10px;padding:4px;box-shadow:0 4px 14px #0009;}
+    .layout-edit .layout-controls{display:flex;}
+    .layout-controls button{background:#33486c;color:#fff;border:1px solid #8eabd6;border-radius:7px;padding:7px 10px;min-height:36px;font-size:13px;font-weight:800;touch-action:none;cursor:grab;}
+    .layout-controls .layout-resize{cursor:nwse-resize;background:#65428b;}
+    .layout-controls .layout-handle:active{cursor:grabbing;}
+    .layout-edit .layout-window{padding-top:max(45px,1.2em);}
+    .layout-edit .agenda-section{padding-top:52px;}
+    .layout-edit .focus-top{margin-top:5px;}
+    .layout-edit .champs-head{padding-top:41px;}
+    .layout-edit .fourth-row{padding-top:58px;}
+    .layout-edit .layout-window.drag-preview{z-index:10;box-shadow:0 15px 45px #000b;opacity:.9;}
+    .layout-edit .layout-window.drop-target{outline:4px solid #d8acff;outline-offset:4px;}
+    .layout-edit-panel{display:none;position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:17;padding:9px 10px;border-radius:13px;max-width:min(650px,92vw);background:#101d31f5;border:1px solid #b9a4ef;box-shadow:0 9px 23px #0009;color:#fff;gap:9px;align-items:center;flex-wrap:wrap;}
+    .layout-edit .layout-edit-panel{display:flex;}
+    .layout-edit-panel .hint{font-size:12px;color:#d5dffe;}
+    .layout-edit-panel button{border:1px solid #b7a5e2;border-radius:9px;background:#3e316a;color:#fff;font-weight:850;padding:8px 12px;min-height:39px;}
+    .layout-edit-panel button.primary{background:#d7aaff;color:#211333;}
+    .layout-custom .layout-window .focus-name,.layout-custom .layout-window .focus-directions,.layout-custom .layout-window .champ-value,.layout-custom .layout-window .widget-value{overflow-wrap:anywhere;}
+    .layout-width-row{display:grid;grid-template-columns:minmax(0,1fr) 155px;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid #344968;}
+    .layout-width-row strong{font-size:13px;}
+    .layout-width-row .field{padding:7px;}
+    @media (max-width:600px){.layout-width-row{grid-template-columns:1fr;gap:4px}.layout-edit-panel{top:6px;left:50%;max-width:96vw;}.layout-edit-panel .hint{display:none}}
+
   </style>
 </head>
 <body>
@@ -301,7 +368,7 @@
     <div class="topline">
       <div class="brand-row">
         <div class="brand-icon" aria-hidden="true">⌁</div>
-        <div><div class="kicker">Teaching dashboard</div><div class="appname">CLASS COMMAND <span style="font-size:.5em;color:#95b4d4;vertical-align:middle">Classic · Studio</span></div></div>
+        <div><div class="kicker">Teaching dashboard</div><div class="appname">CLASS COMMAND <span style="font-size:.5em;color:#95b4d4;vertical-align:middle">Classic · Studio 1.2</span></div></div>
       </div>
       <div class="meta"><div class="date-line" id="today"></div><div class="clock" id="clock"></div></div>
     </div>
@@ -312,7 +379,6 @@
     <section class="photo-sheet" id="photoSheet" aria-label="Full-lesson checklist" hidden>
       <div class="photo-heading"><div><span class="photo-eyebrow">PHOTO MODE · COMPLETE CLASS CHECKLIST</span><h2>Everything to do today</h2></div><div class="photo-date" id="photoDate"></div></div>
       <div class="photo-list" id="photoList"></div>
-      <p class="photo-footnote">All directions are included. Save PNG for a clean copy to post in Schoology.</p>
     </section>
     <section class="agenda-section" id="agendaSection" aria-label="Lesson agenda">
       <div class="section-label"><span>Lesson agenda · tap to jump</span><span id="progressLabel"></span></div>
@@ -373,6 +439,10 @@
       </div>
     </div>
   </nav>
+    <div class="layout-edit-panel" id="layoutEditPanel" role="toolbar" aria-label="Arrange classroom windows">
+      <span class="hint">Drag ↕ to move · ↘ to resize · ↑ ↓ also reorder</span>
+      <button id="resetLayoutFloating" type="button">Reset layout</button><button class="primary" id="finishArrange" type="button">✓ Done arranging</button>
+    </div>
     <button class="controls-tab" id="showDock" aria-label="Show the bottom teaching controls">▴ Show controls</button>
     <button class="presentation-exit" id="exitPresentation" aria-label="Exit presentation view">Exit presentation view ↙</button>
   </div><!-- fittedApp: student display and fixed teaching toolbar -->
@@ -399,13 +469,28 @@
       const THEME_LABELS={midnight:'Midnight Blue (Original)',forest:'Forest Green',ocean:'Ocean Blue',sunset:'Evening Sunset',rose:'Rosewood', 'ultra-purple':'Ultra Purple · tribute edition'};
       const WIDGET_COLORS={theme:'Follow overall theme',purple:'Purple',teal:'Teal',green:'Green',rose:'Rose',amber:'Amber',cobalt:'Cobalt'};
       const DEFAULT_CHAMP_OPTIONS={help:[],move:[],participation:[],success:[]};
-      const DEFAULT_WIDGETS={target:false,reminder:false,tech:false,targetText:'',reminderText:'',techStatus:'Laptops closed'};
+      const TECH_CHOICES=['Laptop closed','Laptop in your bag','Laptops out','Laptops & wired earbuds allowed'];
+      const OLD_TECH_MAP={'Laptops closed':'Laptop closed','Laptops permitted':'Laptops out','Laptops + wired earbuds':'Laptops & wired earbuds allowed','No technology':'Laptop in your bag','Teacher directions only':'Laptop closed'};
+      const DEFAULT_WIDGETS={target:false,reminder:false,tech:false,targetText:'',reminderText:'',techStatus:'Laptop closed'};
+      const PANEL_NAMES={agenda:'Agenda',focus:'Current activity',timer:'Timer',fourth:'Fourth-row widgets',champs:'CHAMPS'};
+      const PANEL_ORDER=['agenda','focus','timer','fourth','champs'];
+      const DEFAULT_LAYOUT=()=>({enabled:false,order:[...PANEL_ORDER],items:{agenda:{span:12,height:0},focus:{span:7,height:220},timer:{span:5,height:220},fourth:{span:12,height:0},champs:{span:12,height:0}}});
+      function cleanLayout(value){const base=DEFAULT_LAYOUT(),v=value&&typeof value==='object'?value:{};
+        base.enabled=!!v.enabled;
+        const order=Array.isArray(v.order)?v.order.filter(x=>PANEL_ORDER.includes(x)):[];
+        base.order=[...new Set([...order,...PANEL_ORDER])];
+        for(const name of PANEL_ORDER){const it=(v.items||{})[name]||{};base.items[name].span=clamp(Math.round(Number(it.span)||base.items[name].span),3,12);
+          base.items[name].height=clamp(Math.round(Number(it.height)||0),0,750);}
+        return base;}
+      let arranging=false,layoutGesture=null;
+
       const DEFAULT_COLOR_AREAS={header:'theme',agenda:'theme',focus:'theme',timer:'theme',champs:'theme',fourth:'theme',dock:'theme'};
       function cleanStudioSettings(r){const x=r||{},valid=['small','medium','large'];
         return {theme:THEMES[x.theme]?x.theme:'midnight',textSizes:Object.fromEntries(SIZE_KEYS.map(k=>[k,valid.includes((x.textSizes||{})[k])?x.textSizes[k]:'small'])),
           colors:Object.fromEntries(Object.keys(DEFAULT_COLOR_AREAS).map(k=>[k,WIDGET_COLORS[(x.colors||{})[k]]?(x.colors||{})[k]:'theme'])),
           champOptions:Object.fromEntries(Object.keys(DEFAULT_CHAMP_OPTIONS).map(k=>[k,Array.isArray((x.champOptions||{})[k])?[...new Set(x.champOptions[k].filter(v=>typeof v==='string').map(v=>v.trim().slice(0,120)).filter(Boolean))].slice(0,25):[]])),
-          widgets:{...DEFAULT_WIDGETS,...(x.widgets||{})},stoplight:!!x.stoplight,pngMode:x.pngMode==='live'?'live':'checklist',
+          widgets:(()=>{const w={...DEFAULT_WIDGETS,...(x.widgets||{})};w.techStatus=OLD_TECH_MAP[w.techStatus]||w.techStatus;
+            if(!TECH_CHOICES.includes(w.techStatus))w.techStatus=TECH_CHOICES[0];return w;})(),layout:cleanLayout(x.layout),stoplight:x.stoplight!==false,pngMode:x.pngMode==='live'?'live':'checklist',
           conversationLabels:CONVERSATIONS.map((standard,i)=>typeof (x.conversationLabels||[])[i]==='string'?x.conversationLabels[i].slice(0,120)||standard:standard)};
       }
 
@@ -488,7 +573,7 @@
         try{localStorage.setItem(VIEW_KEY,JSON.stringify({toolbarHidden,photoMode}));}catch(e){}
         requestFit();
       }
-      let editorPanelState={theme:true,layout:false,sizes:false,toolbar:false,timer:false,labels:false,champchoices:false};
+      let editorPanelState={theme:true,layout:false,sizes:false,toolbar:false,timer:false,labels:false,champchoices:false,liveActions:true};
       // The fitted viewport contains both the dashboard and the fixed teaching dock.
       // Scale the whole surface to the iPad's *visible* viewport, keeping tap targets
       // aligned even when an HDMI display letterboxes the iPad's native aspect ratio.
@@ -505,6 +590,7 @@
         appliedScale=scale;
       }
       function updateFit(){
+        if(layoutGesture)return; // don't move the viewport while a handle is dragged
         const view=viewportSize();
         if(data.settings.autoFit&&photoMode){
           // Checklists can be arbitrarily long: keep them readable and allow scrolling.
@@ -571,7 +657,7 @@
         picker.innerHTML=library.lessons.map(l=>`<option value="${escapeHTML(l.id)}" ${l.id===library.activeId?'selected':''}>${escapeHTML((l.date?l.date+' · ':'')+l.label)}</option>`).join('');
       }
       function chooseLesson(id){
-        if(id===library.activeId)return;
+        if(id===library.activeId)return;arranging=false;layoutGesture=null;
         if(!library.lessons.some(x=>x.id===id))return;
         // Pausing before switching avoids a background countdown continuing unnoticed.
         timer.seconds=secondsLeft();timer.running=false;timer.endsAt=null;
@@ -634,7 +720,10 @@
       function secondsLeft(){return timer.running?Math.max(0,Math.ceil((timer.endsAt-Date.now())/1000)):timer.seconds;}
       function tick(){if(timer.running&&secondsLeft()<=0){timer.running=false;timer.seconds=0;timer.endsAt=null;persist();notice('Time is up!')}renderTimer();}
       function formatTime(s){s=Math.max(0,Math.ceil(s));return `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`}
-      function renderTimer(){const s=secondsLeft();el('digits').textContent=formatTime(s);el('digits').classList.toggle('finished',s===0);el('timerStatus').textContent=timer.running?'Running':s===0?'Time is up':'Paused / ready';el('timerStatus').classList.toggle('finished',s===0);el('toggleTimer').textContent=timer.running?'Ⅱ Pause':'▶ Start';}
+      function renderTimer(){const s=secondsLeft();el('digits').textContent=formatTime(s);el('digits').classList.toggle('finished',s===0);el('timerStatus').textContent=timer.running?'Running':s===0?'Time is up':'Paused / ready';el('timerStatus').classList.toggle('finished',s===0);el('toggleTimer').textContent=timer.running?'Ⅱ Pause':'▶ Start';
+        const quickTime=el('quickTimerRemaining'),quickButton=document.querySelector('[data-quick="timer"]');
+        if(quickTime)quickTime.textContent=formatTime(s);
+        if(quickButton)quickButton.textContent=timer.running?'Ⅱ Pause':'▶ Start';}
       function renderClock(){const now=new Date();el('clock').textContent=new Intl.DateTimeFormat('en-US',{hour:'numeric',minute:'2-digit'}).format(now);el('today').textContent=new Intl.DateTimeFormat('en-US',{weekday:'short',month:'short',day:'numeric'}).format(now);}
       function conversationLabel(i){return data.settings.conversationLabels[i]||CONVERSATIONS[i];}
       function optionsFor(key){
@@ -657,11 +746,17 @@
       }
       function renderWidgets(){
         const w=data.settings.widgets,parts=[];
-        if(w.target)parts.push(['Learning target',w.targetText||'Add your learning target in Setup']);
-        if(w.reminder)parts.push(['Reminder',w.reminderText||'Add a reminder in Setup']);
-        if(w.tech)parts.push(['Technology status',w.techStatus]);
+        if(w.target)parts.push(`<div class="widget-card"><div class="widget-label">Learning target</div><div class="widget-value">${escapeHTML(w.targetText||'Add your learning target in Setup')}</div></div>`);
+        if(w.reminder)parts.push(`<div class="widget-card"><div class="widget-label">Reminder</div><div class="widget-value">${escapeHTML(w.reminderText||'Add a reminder in Setup')}</div></div>`);
+        if(w.tech){const status=TECH_CHOICES.includes(w.techStatus)?w.techStatus:TECH_CHOICES[0],key=['closed','bag','out','earbuds'][TECH_CHOICES.indexOf(status)];
+          // Airplane-style illuminated seatbelt sign, drawn with inline vector shapes.
+          const sign=`<svg viewBox="0 0 56 56" fill="none" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 14l19 17M50 14L31 31"/><rect x="19" y="26" width="13" height="11" rx="2"/><path d="M22 29h7M24 34h4M6 14l5-5 14 13M50 14l-5-5-14 13"/>
+            <path d="M10 45h36" stroke-width="2"/></svg>`;
+          parts.push(`<div class="widget-card widget-tech-card"><div class="widget-label">Technology · seatbelt sign</div><button class="widget-tech" id="cycleTechStatus" data-tech="${key}" aria-label="Technology status: ${escapeHTML(status)}. Tap to cycle to the next status." type="button"><span class="seatbelt-icon">${sign}</span><span class="tech-copy">${escapeHTML(status)}<span class="tech-hint">Tap sign to change expectation</span></span></button></div>`);
+        }
         el('fourthRow').hidden=parts.length===0;
-        el('fourthRow').innerHTML=parts.map(([name,value])=>`<div class="widget-card"><div class="widget-label">${escapeHTML(name)}</div><div class="widget-value">${escapeHTML(value)}</div></div>`).join('');
+        el('fourthRow').innerHTML=parts.join('');
       }
       function applyAppearance(){
         const root=el('fittedApp'),st=data.settings,t=THEMES[st.theme];
@@ -672,7 +767,7 @@
           const element=id?el(id):area==='focus'?document.querySelector('.focus'):document.querySelector('.dock');
           const value=st.colors[area];if(value==='theme')element.removeAttribute('data-color');else element.dataset.color=value;
         }
-        root.classList.toggle('stoplight-on',st.stoplight);
+        root.classList.toggle('stoplight-on',st.stoplight);applyVoiceSignal();
         el('stoplightToggle').setAttribute('aria-pressed',String(st.stoplight));
         el('stoplightToggle').textContent=st.stoplight?'◉ Colors ON':'◉ Colors';
       }
@@ -726,6 +821,60 @@
           notice('Presentation view · exit button at bottom right');
         }
       }
+      function panelElement(name){return {agenda:el('agendaSection'),focus:document.querySelector('.focus'),timer:el('timerPanel'),fourth:el('fourthRow'),champs:el('champsSection')}[name];}
+      function applyWindowLayout(){
+        const cfg=data.settings.layout,root=el('fittedApp');root.classList.toggle('layout-custom',cfg.enabled);
+        root.classList.toggle('layout-edit',cfg.enabled&&arranging);
+        for(const [idx,name] of cfg.order.entries()){
+          const panel=panelElement(name),layout=cfg.items[name];
+          panel.classList.add('layout-window');panel.dataset.layoutWindow=name;
+          if(cfg.enabled){panel.style.gridColumn=`span ${layout.span}`;panel.style.order=String(idx+10);
+            panel.style.minHeight=layout.height?`${layout.height}px`:'';
+          }else{panel.style.gridColumn='';panel.style.order='';panel.style.minHeight='';}
+          if(!panel.querySelector('.layout-controls')){
+            const controls=document.createElement('div');controls.className='layout-controls';
+            controls.innerHTML=`<button type="button" class="layout-handle layout-drag" aria-label="Drag to move ${PANEL_NAMES[name]}" title="Drag to move">↕ Move</button><button type="button" data-layoutshift="-1" aria-label="Move ${PANEL_NAMES[name]} earlier" title="Move earlier">↑</button><button type="button" data-layoutshift="1" aria-label="Move ${PANEL_NAMES[name]} later" title="Move later">↓</button><button type="button" class="layout-handle layout-resize" aria-label="Drag to resize ${PANEL_NAMES[name]}" title="Drag right to widen; down to make taller">↘ Size</button>`;
+            panel.appendChild(controls);
+          }
+        }
+      }
+      function resetWindowLayout(){data.settings.layout=DEFAULT_LAYOUT();arranging=false;persist();renderScreen();renderEditor();notice('Original window layout restored');}
+      function startArrange(){arranging=true;data.settings.layout.enabled=true;data.settings.simple=false;
+        persist();renderScreen();closeEditor();notice('Drag ↕ to reorder; ↘ to resize. Tap Done when finished.');}
+      function endArrange(){arranging=false;applyWindowLayout();persist();requestFit();notice('Window layout saved');}
+      function beginLayoutGesture(e){
+        const handle=e.target.closest('.layout-handle');if(!arranging||!handle||e.button>0)return;
+        const panel=handle.closest('[data-layout-window]');if(!panel)return;
+        e.preventDefault();const name=panel.dataset.layoutWindow,l=data.settings.layout.items[name];
+        layoutGesture={id:e.pointerId,panel,name,type:handle.classList.contains('layout-resize')?'resize':'move',
+          fromX:e.clientX,fromY:e.clientY,span:l.span,height:l.height||Math.round(panel.getBoundingClientRect().height/appliedScale),target:null};
+        panel.classList.add('drag-preview');try{handle.setPointerCapture(e.pointerId)}catch(_){}
+      }
+      function moveLayoutGesture(e){const g=layoutGesture;if(!g||e.pointerId!==g.id)return;e.preventDefault();
+        const dx=(e.clientX-g.fromX)/appliedScale,dy=(e.clientY-g.fromY)/appliedScale;
+        if(g.type==='resize'){
+          const screenWidth=el('screen').clientWidth,unit=Math.max(35,(screenWidth-11*12)/12),span=clamp(g.span+Math.round(dx/unit),3,12),height=clamp(Math.round((g.height+dy)/10)*10,110,750);
+          const item=data.settings.layout.items[g.name];item.span=span;item.height=height;
+          g.panel.style.gridColumn=`span ${span}`;g.panel.style.minHeight=height+'px';
+        }else{
+          g.panel.style.transform=`translate(${dx}px,${dy}px)`;
+          g.panel.style.pointerEvents='none';
+          const target=document.elementFromPoint(e.clientX,e.clientY)?.closest('[data-layout-window]');
+          g.panel.style.pointerEvents='';
+          const name=target?.dataset.layoutWindow;
+          for(const w of document.querySelectorAll('.layout-window.drop-target'))w.classList.remove('drop-target');
+          if(name&&name!==g.name){g.target=name;target.classList.add('drop-target');}else{g.target=null;}
+        }
+      }
+      function finishLayoutGesture(e){const g=layoutGesture;if(!g||e.pointerId!==g.id)return;
+        g.panel.style.transform='';g.panel.classList.remove('drag-preview');
+        for(const w of document.querySelectorAll('.layout-window.drop-target'))w.classList.remove('drop-target');
+        if(g.type==='move'&&g.target){const order=data.settings.layout.order;
+          const from=order.indexOf(g.name),to=order.indexOf(g.target);
+          if(from>=0&&to>=0){order.splice(from,1);order.splice(to,0,g.name);}
+        }
+        layoutGesture=null;persist();applyWindowLayout();requestFit();
+      }
       function renderAgenda(){const root=el('agenda');root.innerHTML=data.steps.map((s,i)=>`<button class="step ${i===data.index?'active':i<data.index?'done':''}" data-step="${i}" ${i===data.index?'aria-current="step"':''} title="Jump to ${escapeHTML(s.name)}"><span class="step-num">${i<data.index?'✓':i+1}</span><span class="step-info"><span class="step-name">${escapeHTML(s.name)}</span><span class="step-mins">${s.minutes} min${i===data.index?' · NOW':''}</span></span></button>`).join('');
         el('progressLabel').textContent=`${data.index+1} of ${data.steps.length}`;}
       function champsCards(){const s=current(),v=s.voice;return [
@@ -733,14 +882,16 @@
         ['H','Help',s.help,'help'],['A','Activity',s.name,'none'],['M','Movement',s.move,'move'],['P','Participation',s.participation,'participation'],['S','Success',s.success,'success']
       ]}
       function renderChamps(){el('champsGrid').innerHTML=champsCards().map(([letter,name,value,key])=>`<button class="champ ${key!=='none'?'clickable':''}" ${key==='none'?'disabled':''} data-champ="${key}" aria-label="${escapeHTML(name)}: ${escapeHTML(value)}${key!=='none'?'. Tap to change.':''}"><span class="champ-top"><span class="letter">${letter}</span><span class="champ-name">${name}</span></span><span class="champ-value">${escapeHTML(value)}</span></button>`).join('');
-        document.querySelectorAll('[data-voice]').forEach(btn=>{const yes=Number(btn.dataset.voice)===current().voice;btn.classList.toggle('selected',yes);btn.setAttribute('aria-pressed',String(yes))});}
+        document.querySelectorAll('[data-voice]').forEach(btn=>{const yes=Number(btn.dataset.voice)===current().voice;btn.classList.toggle('selected',yes);btn.setAttribute('aria-pressed',String(yes))});applyVoiceSignal();}
+      function applyVoiceSignal(){const colors=[['#a52f40','#ff9daa'],['#ad771e','#ffe08c'],['#1b8563','#92f0c4'],['#326ead','#a5d0ff'],['#7743af','#d5b2ff']],c=colors[current().voice];
+        el('fittedApp').style.setProperty('--voice-color',c[0]);el('fittedApp').style.setProperty('--voice-edge',c[1]);}
       function renderScreen(){renderLessonPicker();const s=current();el('lessonTitle').textContent=data.title;el('lessonSub').textContent=data.subtitle;el('currentName').textContent=s.name;el('currentDirections').textContent=s.directions||'Your directions will appear here.';el('activityNumber').textContent=`ACTIVITY ${data.index+1} / ${data.steps.length}`;
         el('nextName').textContent=data.index+1<data.steps.length?data.steps[data.index+1].name:'Lesson complete';
         el('prevStep').disabled=data.index===0;el('nextStep').disabled=data.index===data.steps.length-1;
         el('agendaSection').style.display=data.settings.showAgenda?'':'none';el('champsSection').style.display=data.settings.showChamps?'':'none';el('timerPanel').style.display=data.settings.showTimer?'':'none';el('clock').style.display=data.settings.showClock?'':'none';el('today').style.display=data.settings.showClock?'':'none';el('nextActivity').style.display=data.settings.showNext?'':'none';
         el('screen').classList.toggle('simple',!!data.settings.simple);renderControls();
         if(!data.settings.showTimer){document.querySelector('.stage').style.gridTemplateColumns='1fr'}else{document.querySelector('.stage').style.gridTemplateColumns=''}
-        applyAppearance();renderWidgets();renderPhotoList();renderAgenda();renderChamps();renderTimer();renderClock();requestFit();}
+        applyAppearance();renderWidgets();renderPhotoList();renderAgenda();renderChamps();renderTimer();renderClock();applyWindowLayout();requestFit();}
       function chooseStep(index){index=clamp(index,0,data.steps.length-1);if(index===data.index)return;data.index=index;timer={seconds:current().minutes*60,running:!!data.settings.autoStart,endsAt:data.settings.autoStart?Date.now()+current().minutes*60000:null};persist();renderScreen();notice(current().name);}
       function adjustTime(change){const n=clamp(secondsLeft()+change,0,10800);timer.seconds=n;if(timer.running){timer.endsAt=Date.now()+n*1000;if(n===0){timer.running=false;timer.endsAt=null}}persist();renderTimer();}
       function toggleTimer(){if(timer.running){timer.seconds=secondsLeft();timer.running=false;timer.endsAt=null;}else {if(secondsLeft()===0)timer.seconds=current().minutes*60;timer.running=true;timer.endsAt=Date.now()+timer.seconds*1000;}persist();renderTimer();}
@@ -928,14 +1079,47 @@
         <div class="addrow"><button class="softbtn" data-add="custom">+ Blank activity</button><button class="softbtn" data-add="group">+ Group discussion</button><button class="softbtn" data-add="individual">+ Independent work</button></div>
         <div class="form-section">5. Fourth Row Widgets &amp; Stoplight Colors</div>
         <p class="form-subtitle">Optional widgets appear between the activity and CHAMPS sections. All are off by default so the original screen still fits.</p>
-        <label class="checkrow"><input type="checkbox" data-stoplight ${st.stoplight?'checked':''}>Use conversation stoplight colors (red 0, yellow 1, green 2, blue 3, purple 4)</label>
+        <label class="checkrow"><input type="checkbox" data-stoplight ${st.stoplight?'checked':''}>Enable conversation stoplight colors (independent of the Colors toolbar shortcut)</label>
         <label class="checkrow"><input type="checkbox" data-widget="target" ${st.widgets.target?'checked':''}>Show learning target</label>
         <label class="fieldwrap" style="display:block"><span class="form-label">Learning target</span><textarea class="field" maxlength="300" data-widgettext="targetText">${escapeHTML(st.widgets.targetText)}</textarea></label>
         <label class="checkrow"><input type="checkbox" data-widget="reminder" ${st.widgets.reminder?'checked':''}>Show class reminder</label>
         <label class="fieldwrap" style="display:block"><span class="form-label">Reminder</span><textarea class="field" maxlength="300" data-widgettext="reminderText">${escapeHTML(st.widgets.reminderText)}</textarea></label>
         <label class="checkrow"><input type="checkbox" data-widget="tech" ${st.widgets.tech?'checked':''}>Show technology status</label>
-        <label class="fieldwrap" style="display:block"><span class="form-label">Technology expectation</span><select class="field" data-widgetchoice="techStatus">${templateOptions(['Laptops closed','Laptops permitted','Laptops + wired earbuds','No technology','Teacher directions only'],st.widgets.techStatus)}</select></label>
+        <p class="save-hint">The illuminated seatbelt-style sign appears beside Technology Status on the board. Tap the sign during class to cycle through the four laptop expectations.</p>
+        <label class="fieldwrap" style="display:block"><span class="form-label">Technology expectation</span><select class="field" data-widgetchoice="techStatus">${templateOptions(TECH_CHOICES,st.widgets.techStatus)}</select></label>
         <div class="form-section">6. Quick Presentation Options</div>
+        <details class="settings-details" data-panel="liveActions" ${editorPanelState.liveActions?'open':''}>
+          <summary>Live controls · always available in Setup</summary><div class="control-fields">
+          <p class="setup-live-help">These are the actual controls, not visibility settings. They keep working even if their shortcuts are hidden from the bottom bar. Use Customize Buttons to decide only what appears on the bar.</p>
+          <div class="setup-live-group"><div class="setup-live-head">Stoplight colors</div><div class="setup-live-buttons">
+            <button type="button" class="softbtn is-stoplight" data-quick="stoplight" aria-pressed="${st.stoplight}">◉ Colors ${st.stoplight?'ON':'OFF'}</button>
+          </div><p class="setup-live-status">The CHAMPS colors will ${st.stoplight?'follow':'not follow'} the current conversation level, whether or not the Colors shortcut is displayed.</p></div>
+          <div class="setup-live-group"><div class="setup-live-head">Agenda</div>
+            <label class="fieldwrap" style="display:block"><span class="form-label">Current activity</span>
+            <select class="field" data-quick-step>${data.steps.map((step,i)=>`<option value="${i}" ${i===data.index?'selected':''}>${i+1}. ${escapeHTML(step.name)}</option>`).join('')}</select></label>
+            <div class="setup-live-buttons"><button type="button" class="minibtn" data-quick="prev" ${data.index===0?'disabled':''}>← Previous</button><button type="button" class="minibtn" data-quick="next" ${data.index===data.steps.length-1?'disabled':''}>Next →</button></div>
+          </div>
+          <div class="setup-live-group"><div class="setup-live-head">Timer</div><div class="setup-live-buttons">
+            <button type="button" class="softbtn" data-quick="timer">${timer.running?'Ⅱ Pause':'▶ Start'}</button>
+            <button type="button" class="minibtn" data-quick="minus">−${st.controls.increments.minus} min</button>
+            <button type="button" class="minibtn" data-quick="plus">+${st.controls.increments.plus} min</button>
+            <button type="button" class="minibtn" data-quick="plusFive">+${st.controls.increments.plusFive} min</button>
+            <button type="button" class="minibtn" data-quick="reset">↺ Reset</button>
+          </div><p class="setup-live-status">Remaining: <span id="quickTimerRemaining">${String(Math.floor(secondsLeft()/60)).padStart(2,'0')}:${String(secondsLeft()%60).padStart(2,'0')}</span></p></div>
+          <div class="setup-live-group"><div class="setup-live-head">Conversation level</div><div class="setup-live-buttons">
+            ${[0,1,2,3,4].map(n=>`<button type="button" class="minibtn" data-quick="voice-${n}" aria-pressed="${current().voice===n}">Level ${n}</button>`).join('')}
+          </div></div>
+          <div class="setup-live-group"><div class="setup-live-head">Presentation and screen size</div><div class="setup-live-buttons">
+            <button type="button" class="minibtn" data-quick="photo" aria-pressed="${photoMode}">${photoMode?'Exit Photo Mode':'Photo Mode'}</button>
+            <button type="button" class="minibtn" data-quick="focus" aria-pressed="${st.simple}">${st.simple?'Exit Focus':'Focus'}</button>
+            <button type="button" class="minibtn" data-quick="sizeDown">A− Smaller</button>
+            <button type="button" class="minibtn" data-quick="fit">Fit</button>
+            <button type="button" class="minibtn" data-quick="sizeUp">A+ Larger</button>
+            <button type="button" class="minibtn" data-quick="png">↓ Save PNG</button>
+            <button type="button" class="minibtn" data-quick="fullscreen">⛶ Full Screen</button>
+            <button type="button" class="minibtn" data-quick="toolbar" aria-pressed="${!toolbarHidden}">${toolbarHidden?'Show bottom bar':'Hide bottom bar'}</button>
+          </div></div>
+        </div></details>
         <label class="checkrow"><input type="checkbox" data-appearance="photoMode" ${photoMode?'checked':''}>Show all-directions Photo Mode now</label>
         <label class="checkrow"><input type="checkbox" data-appearance="toolbarHidden" ${toolbarHidden?'checked':''}>Keep bottom controls collapsed</label>
         <label class="checkrow"><input type="checkbox" data-setting="autoStart" ${st.autoStart?'checked':''}>Auto-start the timer when changing activities</label>
@@ -950,8 +1134,13 @@
           <p class="save-hint">Choose “Follow overall theme” to restore a section to the main palette.</p></div></details>
         <details class="settings-details" data-panel="layout" ${editorPanelState.layout?'open':''}><summary>Layout and Screen Fit</summary><div class="control-fields">
           <label class="checkrow"><input type="checkbox" data-setting="autoFit" ${st.autoFit?'checked':''}>Automatically fit the teaching dashboard on screen</label>
-          <p class="save-hint">Use A−, A+ or Fit on the bottom bar to adjust the whole board. Photo Mode lets very long checklists scroll rather than shrinking everything until the text becomes unreadable.</p>
+          <p class="save-hint">Use A−, A+ or Fit on the bottom bar or in Quick Presentation Options to adjust the whole board. Photo Mode lets very long checklists scroll rather than shrinking everything until the text becomes unreadable.</p>
           <label class="checkrow"><input type="checkbox" data-setting="simple" ${st.simple?'checked':''}>Use simplified Focus view in Teaching Mode</label>
+          <div class="form-label" style="margin-top:18px">Movable and resizable windows</div>
+          <p class="save-hint">Drag ↕ to move, use ↑ / ↓ to reorder by tapping, and drag ↘ to resize a window. Windows snap to a grid without overlapping. Text-size sliders remain independent, and windows grow as needed to fit their text.</p>
+          <div class="addrow"><button class="softbtn" id="openArrange">↕ Arrange windows on screen</button><button class="minibtn" id="resetWindowLayout">Reset original window positions</button></div>
+          <p class="save-hint">Or set window widths here if dragging isn't convenient on the Promethean board:</p>
+          ${st.layout.order.map(name=>`<div class="layout-width-row"><strong>${PANEL_NAMES[name]}</strong><select class="field" data-layoutwidth="${name}" aria-label="${PANEL_NAMES[name]} window width">${[[12,'Full width'],[9,'Three-quarter width'],[8,'Two-thirds width'],[6,'Half width'],[4,'One-third width']].map(([span,label])=>`<option value="${span}" ${st.layout.items[name].span===span?'selected':''}>${label}</option>`).join('')}</select></div>`).join('')}
         </div></details>
         <details class="settings-details" data-panel="sizes" ${editorPanelState.sizes?'open':''}><summary>Display Size / Projector · Text sliders</summary><div class="control-fields">
           <p class="form-subtitle">Each slider has Small (Standard), Medium and Large. Each section scales independently; text wraps, and Auto-fit may reduce the whole display to keep every section visible.</p>
@@ -961,9 +1150,9 @@
           <button class="touch-test" id="touchTest" type="button">Tap here on the board to test touch</button><span class="touch-result" id="touchResult">No input recorded yet.</span>
         </div></details>
         <details class="settings-details" data-panel="toolbar" ${editorPanelState.toolbar?'open':''}><summary>Customize Buttons &amp; CHAMPS options</summary><div class="control-fields">
-          <p class="save-hint">Choose which quick buttons appear. Setup and the bar's Hide/Show control cannot be removed.</p>
+          <p class="save-hint"><strong>Visibility only:</strong> these checkboxes decide which shortcuts appear on the bottom bar. Unchecking a button does not disable its feature. All controls remain available under Quick Presentation Options → Live controls. Setup and Hide/Show cannot be removed.</p>
           ${st.controls.order.map((group,i)=>`<div class="custom-toolbar-row"><strong style="font-size:13px">${GROUP_TITLES[group]}</strong><span class="tinyrow"><button class="minibtn" data-groupmove="${group},-1" ${i===0?'disabled':''}>←</button><button class="minibtn" data-groupmove="${group},1" ${i===st.controls.order.length-1?'disabled':''}>→</button></span></div>
-          ${Object.entries(BUTTON_NAMES).filter(([key])=>({navigation:['prev','next'],timer:['start'],voice:['voice','stoplight'],size:['sizeDown','fit','sizeUp'],tools:['photo','focus','png','fullscreen']}[group]||[]).includes(key)).map(([key,label])=>`<label class="checkrow"><input type="checkbox" data-control="${key}" ${st.controls.show[key]?'checked':''}>${label}</label>`).join('')}`).join('')}
+          ${Object.entries(BUTTON_NAMES).filter(([key])=>({navigation:['prev','next'],timer:['start'],voice:['voice','stoplight'],size:['sizeDown','fit','sizeUp'],tools:['photo','focus','png','fullscreen']}[group]||[]).includes(key)).map(([key,label])=>`<label class="checkrow"><input type="checkbox" data-control="${key}" ${st.controls.show[key]?'checked':''}>Show ${label} shortcut in bottom bar</label>`).join('')}`).join('')}
           <details class="settings-details" data-panel="champchoices" ${editorPanelState.champchoices?'open':''}><summary>Custom CHAMPS dropdown options</summary><div class="control-fields"><p class="champs-custom-note">Built-in choices remain available. Add your own options below, one per line, and they'll appear in every activity's dropdown for this lesson.</p>
           <div class="form-label">Conversation · describe each level</div>
           ${[0,1,2,3,4].map(n=>`<label class="fieldwrap" style="display:block"><span class="form-label">Conversation level ${n}</span><input class="field" maxlength="120" data-conversation-label="${n}" value="${escapeHTML(st.conversationLabels[n])}"></label>`).join('')}
@@ -971,7 +1160,7 @@
           <div class="addrow"><button class="minibtn" id="resetControls">Restore default buttons</button></div>
         </div></details>
         <details class="settings-details" data-panel="timer" ${editorPanelState.timer?'open':''}><summary>Timer Buttons</summary><div class="control-fields">
-          ${[['minus','Subtract time'],['plus','Add time'],['plusFive','Add extra time']].map(([key,label])=>`<div class="fieldrow" style="align-items:center"><label class="checkrow"><input type="checkbox" data-control="${key}" ${st.controls.show[key]?'checked':''}>${label}</label><label class="fieldwrap"><span class="form-label">Minutes</span><input class="field" type="number" min="1" max="30" data-increment="${key}" value="${st.controls.increments[key]}"></label></div>`).join('')}
+          ${[['minus','Subtract time'],['plus','Add time'],['plusFive','Add extra time']].map(([key,label])=>`<div class="fieldrow" style="align-items:center"><label class="checkrow"><input type="checkbox" data-control="${key}" ${st.controls.show[key]?'checked':''}>Show ${label} button</label><label class="fieldwrap"><span class="form-label">Minutes</span><input class="field" type="number" min="1" max="30" data-increment="${key}" value="${st.controls.increments[key]}"></label></div>`).join('')}
           <label class="checkrow"><input type="checkbox" data-control="reset" ${st.controls.show.reset?'checked':''}>Show timer reset</label></div></details>
         <details class="settings-details" data-panel="labels" ${editorPanelState.labels?'open':''}><summary>Button Labels</summary><div class="control-fields">
           ${[['prev','Previous activity'],['next','Next activity'],['photo','Photo Mode'],['focus','Focus mode'],['png','PNG export'],['fullscreen','Full Screen']].map(([key,label])=>`<label class="fieldwrap" style="display:block"><span class="form-label">${label}</span><input class="field" maxlength="26" data-buttonlabel="${key}" value="${escapeHTML(st.controls.labels[key])}"></label>`).join('')}
@@ -993,6 +1182,18 @@
       function moveStep(i,delta){const j=i+delta;if(j<0||j>=data.steps.length)return;[data.steps[i],data.steps[j]]=[data.steps[j],data.steps[i]];if(data.index===i)data.index=j;else if(data.index===j)data.index=i;persist();renderScreen();renderEditor();notice('Activity reordered');}
       function downloadBackup(){downloadText(JSON.stringify({format:'Class Command v1',exported:new Date().toISOString(),...data},null,2),'class-command-selected-lesson.json');notice('Selected lesson backed up');}
       async function importBackup(file){if(!file)return;try{const parsed=JSON.parse(await file.text());if(!Array.isArray(parsed.steps)||!parsed.steps.length)throw new Error('Missing agenda');if(!confirm('Replace your current lesson with this imported lesson?'))return;data=cleanData(parsed);data.index=clamp(data.index,0,data.steps.length-1);resetTimerSilent();persist();renderScreen();renderEditor();notice('Lesson imported');}catch(e){alert('This does not look like a Class Command lesson JSON file.');}}
+      el('screen').addEventListener('click',e=>{const b=e.target.closest('[data-layoutshift]');if(!arranging||!b)return;
+        const key=b.closest('[data-layout-window]')?.dataset.layoutWindow,order=data.settings.layout.order,i=order.indexOf(key),j=i+Number(b.dataset.layoutshift);
+        if(i>=0&&j>=0&&j<order.length){[order[i],order[j]]=[order[j],order[i]];persist();applyWindowLayout();requestFit();notice(PANEL_NAMES[key]+' moved');}});
+      el('screen').addEventListener('pointerdown',beginLayoutGesture);
+      window.addEventListener('pointermove',moveLayoutGesture,{passive:false});
+      window.addEventListener('pointerup',finishLayoutGesture);
+      window.addEventListener('pointercancel',finishLayoutGesture);
+      el('finishArrange').addEventListener('click',endArrange);
+      el('resetLayoutFloating').addEventListener('click',resetWindowLayout);
+      el('fourthRow').addEventListener('click',e=>{if(!e.target.closest('#cycleTechStatus'))return;
+        const now=TECH_CHOICES.indexOf(data.settings.widgets.techStatus);data.settings.widgets.techStatus=TECH_CHOICES[(now+1)%TECH_CHOICES.length];
+        persist();renderWidgets();requestFit();notice(data.settings.widgets.techStatus);});
       el('agenda').addEventListener('click',e=>{const t=e.target.closest('[data-step]');if(t)chooseStep(Number(t.dataset.step));});
       document.querySelectorAll('[data-time]').forEach(b=>b.addEventListener('click',()=>adjustTime(Number(b.dataset.time))));
       el('toggleTimer').addEventListener('click',toggleTimer);el('resetTimer').addEventListener('click',resetTimer);
@@ -1002,7 +1203,12 @@
       el('focusToggle').addEventListener('click',()=>{data.settings.simple=!data.settings.simple;persist();renderScreen();notice(data.settings.simple?'Focus display':'Full display');});
       el('savePng').addEventListener('click',savePNG);
       el('photoToggle').addEventListener('click',()=>setPhotoMode(!photoMode));
-      el('stoplightToggle').addEventListener('click',()=>{data.settings.stoplight=!data.settings.stoplight;persist();applyAppearance();notice(data.settings.stoplight?'Stoplight colors on':'Stoplight colors off');});
+      function setStoplight(on){
+        data.settings.stoplight=!!on;
+        persist();applyAppearance();
+        notice(data.settings.stoplight?'Stoplight colors on':'Stoplight colors off');
+      }
+      el('stoplightToggle').addEventListener('click',()=>setStoplight(!data.settings.stoplight));
       el('fullScreenBtn').addEventListener('click',fullScreen);
       el('exitPresentation').addEventListener('click',()=>{presentationMode=false;updatePresentation();});
       document.addEventListener('fullscreenchange',()=>{renderControls();requestFit();});
@@ -1041,13 +1247,14 @@
       });
       el('drawerBody').addEventListener('change',e=>{const t=e.target;
         if(t.id==='libraryPicker'){chooseLesson(t.value);return;}
+        if(t.dataset.quickStep!==undefined){chooseStep(Number(t.value));renderEditor();return;}
         if(t.dataset.library==='date'){
           activeRecord().date=/^\d{4}-\d{2}-\d{2}$/.test(t.value)?t.value:'';
           persist();renderLessonPicker();return;
         }
-        if(t.dataset.appearance==='toolbarHidden'){setToolbarHidden(t.checked);return;}
-        if(t.dataset.appearance==='photoMode'){setPhotoMode(t.checked);return;}
-        if(t.dataset.stoplight!==undefined){data.settings.stoplight=t.checked;persist();applyAppearance();return;}
+        if(t.dataset.appearance==='toolbarHidden'){setToolbarHidden(t.checked);renderEditor();return;}
+        if(t.dataset.appearance==='photoMode'){setPhotoMode(t.checked);renderEditor();return;}
+        if(t.dataset.stoplight!==undefined){setStoplight(t.checked);renderEditor();return;}
         if(t.dataset.widget){data.settings.widgets[t.dataset.widget]=t.checked;persist();renderWidgets();requestFit();return;}
         if(t.dataset.widgetchoice){data.settings.widgets[t.dataset.widgetchoice]=t.value;persist();renderWidgets();return;}
         if(t.dataset.pngmode!==undefined){data.settings.pngMode=t.value==='live'?'live':'checklist';persist();return;}
@@ -1055,6 +1262,9 @@
         if(t.dataset.area){data.settings.colors[t.dataset.area]=WIDGET_COLORS[t.value]?t.value:'theme';persist();applyAppearance();return;}
         if(t.dataset.champoptions){const key=t.dataset.champoptions;data.settings.champOptions[key]=[...new Set(t.value.split(/\r?\n/).map(x=>x.trim().slice(0,120)).filter(Boolean))].slice(0,25);persist();renderScreen();renderEditor();return;}
 
+        if(t.dataset.layoutwidth){const name=t.dataset.layoutwidth;if(PANEL_NAMES[name]){
+          data.settings.layout.enabled=true;data.settings.layout.items[name].span=clamp(Number(t.value),3,12);
+          persist();renderScreen();}return;}
         if(t.dataset.setting){data.settings[t.dataset.setting]=t.checked;persist();renderScreen();}
         if(t.dataset.control){data.settings.controls.show[t.dataset.control]=t.checked;persist();renderScreen();}
         if(t.dataset.increment){const n=clamp(Math.round(Number(t.value)||1),1,30);t.value=n;data.settings.controls.increments[t.dataset.increment]=n;persist();renderControls();requestFit();}
@@ -1063,6 +1273,32 @@
       el('drawerBody').addEventListener('touchstart',e=>{if(e.target.id==='touchTest'){const out=el('touchResult');if(out)out.textContent='Touch event detected · '+new Date().toLocaleTimeString();}},{passive:true,capture:true});
       el('drawerBody').addEventListener('toggle',e=>{const t=e.target;if(t.dataset&&t.dataset.panel)editorPanelState[t.dataset.panel]=t.open;},true);
       el('drawerBody').addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;
+        if(t.dataset.quick){
+          const action=t.dataset.quick;
+          if(action==='fullscreen'){
+            // Full Screen must be invoked in the user's click gesture, not a timer.
+            closeEditor();void fullScreen();return;
+          }
+          if(action==='png'){void savePNG();return;}
+          if(action==='stoplight')setStoplight(!data.settings.stoplight);
+          else if(action==='prev')chooseStep(data.index-1);
+          else if(action==='next')chooseStep(data.index+1);
+          else if(action==='timer')toggleTimer();
+          else if(action==='reset')resetTimer();
+          else if(['minus','plus','plusFive'].includes(action))adjustTime(data.settings.controls.increments[action]*60*(action==='minus'?-1:1));
+          else if(/^voice-[0-4]$/.test(action))setVoice(Number(action.slice(-1)));
+          else if(action==='photo')setPhotoMode(!photoMode);
+          else if(action==='focus'){data.settings.simple=!data.settings.simple;persist();renderScreen();notice(data.settings.simple?'Focus display':'Full display');}
+          else if(action==='sizeDown')manualSize(-.05);
+          else if(action==='sizeUp')manualSize(.05);
+          else if(action==='fit')restoreAutoFit();
+          else if(action==='toolbar')setToolbarHidden(!toolbarHidden);
+          else return;
+          renderEditor();
+          return;
+        }
+        if(t.id==='openArrange'){startArrange();return;}
+        if(t.id==='resetWindowLayout'){resetWindowLayout();return;}
         if(t.id==='touchTest'){const status=el('touchResult');if(status)status.textContent='Click received. If you used a finger, this device is sending touch events.';return;}
         if(t.id==='addLesson'){addLesson(false);return;}
         if(t.id==='duplicateLesson'){addLesson(true);return;}
