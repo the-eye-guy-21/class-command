@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Class Command">
   <meta name="description" content="A touch-first classroom agenda, timer and CHAMPS dashboard.">
-  <title>Class Command Classic · Studio 1.2</title>
+  <title>Class Command Classic · Studio 1.3</title>
   <style>
     :root { color-scheme: dark; --bg:#0b1220; --panel:#162338; --panel2:#1c2c43; --stroke:#31435d; --muted:#aabbd3; --bright:#f7faff; --blue:#93b5ff; --indigo:#7297ef; --mint:#b8e4b5; --red:#ffb0a8; --shadow:0 12px 45px rgba(0,0,0,.22); }
     * { box-sizing:border-box; }
@@ -360,6 +360,25 @@
     .layout-width-row .field{padding:7px;}
     @media (max-width:600px){.layout-width-row{grid-template-columns:1fr;gap:4px}.layout-edit-panel{top:6px;left:50%;max-width:96vw;}.layout-edit-panel .hint{display:none}}
 
+
+    /* Studio 1.3: inset dropdown chevron for iPad, desktop and Promethean browsers. */
+    select.field,select.lesson-picker{
+      -webkit-appearance:none;appearance:none;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='12' viewBox='0 0 16 12'%3E%3Cpath d='m3 4 5 5 5-5' fill='none' stroke='%23DCEBFF' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-position:right 19px center;background-repeat:no-repeat;background-size:15px 12px;
+      padding-right:48px;
+    }
+    /* Explicit solid backgrounds work even where color-mix() is unsupported. */
+    .stoplight-on .champ[data-champ="voice"]{
+      background:var(--voice-color,#a52f40)!important;background-image:none!important;
+      border:3px solid var(--voice-edge,#ff9daa)!important;
+      box-shadow:0 0 0 2px color-mix(in srgb,var(--voice-edge,#ff9daa) 30%,transparent)!important;
+    }
+    .stoplight-on .champ[data-champ="voice"] .champ-name,
+    .stoplight-on .champ[data-champ="voice"] .champ-value{color:#fff!important;}
+    .stoplight-on .champ[data-champ="voice"] .letter{background:#ffffff!important;color:var(--voice-color,#a52f40)!important;}
+    /* Never display legacy photo instructions, even if imported lesson data contains old notes. */
+    .photo-footnote{display:none!important;}
   </style>
 </head>
 <body>
@@ -368,7 +387,7 @@
     <div class="topline">
       <div class="brand-row">
         <div class="brand-icon" aria-hidden="true">⌁</div>
-        <div><div class="kicker">Teaching dashboard</div><div class="appname">CLASS COMMAND <span style="font-size:.5em;color:#95b4d4;vertical-align:middle">Classic · Studio 1.2</span></div></div>
+        <div><div class="kicker">Teaching dashboard</div><div class="appname">CLASS COMMAND <span style="font-size:.5em;color:#95b4d4;vertical-align:middle">Classic · Studio 1.3</span></div></div>
       </div>
       <div class="meta"><div class="date-line" id="today"></div><div class="clock" id="clock"></div></div>
     </div>
@@ -459,6 +478,7 @@
   <script>
     (function () {
       'use strict';
+      const RELEASE='Studio 1.3 · activity-based technology & stoplight repair';
       const KEY='class-command-v1-data';
       const LIB_KEY='class-command-classic-library-v2';
       const VIEW_KEY='class-command-classic-view';
@@ -499,7 +519,8 @@
       const PARTICIPATION=['Work independently','Discuss with your group','Listen and take notes','Share your thinking'];
       const SUCCESS=['Get started right away','Stay focused','Show your thinking','Complete and submit'];
       const CONVERSATIONS=['Silent / independent','Whisper to a partner','Table conversation','Present to the room','Whole-class voices'];
-      const makeStep=(name,directions,minutes,voice,help,move,participation,success)=>({name,directions,minutes,voice,help,move,participation,success});
+      const makeStep=(name,directions,minutes,voice,help,move,participation,success,techStatus='Laptop closed')=>
+        ({name,directions,minutes,voice,help,move,participation,success,techStatus});
       const DEFAULT_CONTROLS=()=>({
         show:{prev:true,next:true,start:true,voice:true,stoplight:true,sizeDown:true,fit:true,sizeUp:true,photo:true,focus:true,png:true,fullscreen:true,
               minus:true,plus:true,plusFive:true,reset:true},
@@ -521,9 +542,9 @@
         title:'U.S. Government',subtitle:'Unit 3 · State & Local Government',index:0,
         settings:{autoStart:true,showAgenda:true,showChamps:true,showTimer:true,showClock:true,showNext:true,simple:false,autoFit:true,uiScale:1,controls:DEFAULT_CONTROLS(),...cleanStudioSettings(null)},
         steps:[
-          makeStep('Bellringer','Read the short excerpt. Answer the opening questions in your notebook.',10,0,'Raise your hand','Stay seated','Work independently','Get started right away'),
+          makeStep('Bellringer','Read the short excerpt. Answer the opening questions in your notebook.',10,0,'Raise your hand','Stay seated','Work independently','Get started right away','Laptop in your bag'),
           makeStep('Mini-Lesson','How does federalism divide government power? Follow along with the examples.',15,0,'Raise your hand','Stay seated','Listen and take notes','Show your thinking'),
-          makeStep('Source Analysis','Read and annotate the documents. Compare evidence with your table.',20,2,'Ask your table first','At your table','Discuss with your group','Show your thinking'),
+          makeStep('Source Analysis','Read and annotate the documents. Compare evidence with your table.',20,2,'Ask your table first','At your table','Discuss with your group','Show your thinking','Laptops out'),
           makeStep('Exit Ticket','Write a claim and support it with one piece of evidence.',5,0,'Raise your hand','Stay seated','Work independently','Complete and submit')
         ]
       });
@@ -532,8 +553,14 @@
       const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
       let toastTimeout;
       function notice(message){const n=el('toast');n.textContent=message;n.classList.add('show');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>n.classList.remove('show'),1650);}
-      function cleanStep(raw){const s=raw||{};return {name:String(s.name||'New activity').slice(0,90),directions:String(s.directions||'').slice(0,600),minutes:clamp(Number(s.minutes)||5,1,180),voice:clamp(Number(s.voice)||0,0,4),help:String(s.help||HELP[0]).slice(0,120),move:String(s.move||MOVE[0]).slice(0,120),participation:String(s.participation||PARTICIPATION[0]).slice(0,120),success:String(s.success||SUCCESS[0]).slice(0,120)};}
-      function cleanData(raw){const r=raw&&typeof raw==='object'?raw:SAMPLE(),d=SAMPLE();return {title:String(r.title||d.title).slice(0,90),subtitle:String(r.subtitle??d.subtitle).slice(0,150),index:Math.max(0,Math.trunc(Number(r.index)||0)),steps:Array.isArray(r.steps)&&r.steps.length?r.steps.slice(0,30).map(cleanStep):d.steps,settings:{...d.settings,...(r.settings||{}),...cleanStudioSettings(r.settings),controls:cleanControls((r.settings||{}).controls)}};}
+      function cleanStep(raw,legacyTech='Laptop closed'){
+        const s=raw||{};
+        const stored=OLD_TECH_MAP[s.techStatus]||s.techStatus;
+        const migrated=OLD_TECH_MAP[legacyTech]||legacyTech;
+        const techStatus=TECH_CHOICES.includes(stored)?stored:TECH_CHOICES.includes(migrated)?migrated:TECH_CHOICES[0];
+        return {name:String(s.name||'New activity').slice(0,90),directions:String(s.directions||'').slice(0,600),minutes:clamp(Number(s.minutes)||5,1,180),voice:clamp(Number(s.voice)||0,0,4),help:String(s.help||HELP[0]).slice(0,120),move:String(s.move||MOVE[0]).slice(0,120),participation:String(s.participation||PARTICIPATION[0]).slice(0,120),success:String(s.success||SUCCESS[0]).slice(0,120),techStatus};
+      }
+      function cleanData(raw){const r=raw&&typeof raw==='object'?raw:SAMPLE(),d=SAMPLE();return {title:String(r.title||d.title).slice(0,90),subtitle:String(r.subtitle??d.subtitle).slice(0,150),index:Math.max(0,Math.trunc(Number(r.index)||0)),steps:Array.isArray(r.steps)&&r.steps.length?r.steps.slice(0,30).map(step=>cleanStep(step,((r.settings||{}).widgets||{}).techStatus)):d.steps,settings:{...d.settings,...(r.settings||{}),...cleanStudioSettings(r.settings),controls:cleanControls((r.settings||{}).controls)}};}
       function retrieve(){try {const raw=localStorage.getItem(KEY);return raw?cleanData(JSON.parse(raw)):SAMPLE()}catch(e){return SAMPLE()}}
       function localISODate(){const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');}
       function newID(){return 'l'+Date.now().toString(36)+Math.random().toString(36).slice(2,9);}
@@ -748,7 +775,7 @@
         const w=data.settings.widgets,parts=[];
         if(w.target)parts.push(`<div class="widget-card"><div class="widget-label">Learning target</div><div class="widget-value">${escapeHTML(w.targetText||'Add your learning target in Setup')}</div></div>`);
         if(w.reminder)parts.push(`<div class="widget-card"><div class="widget-label">Reminder</div><div class="widget-value">${escapeHTML(w.reminderText||'Add a reminder in Setup')}</div></div>`);
-        if(w.tech){const status=TECH_CHOICES.includes(w.techStatus)?w.techStatus:TECH_CHOICES[0],key=['closed','bag','out','earbuds'][TECH_CHOICES.indexOf(status)];
+        if(w.tech){const status=TECH_CHOICES.includes(current().techStatus)?current().techStatus:TECH_CHOICES[0],key=['closed','bag','out','earbuds'][TECH_CHOICES.indexOf(status)];
           // Airplane-style illuminated seatbelt sign, drawn with inline vector shapes.
           const sign=`<svg viewBox="0 0 56 56" fill="none" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M6 14l19 17M50 14L31 31"/><rect x="19" y="26" width="13" height="11" rx="2"/><path d="M22 29h7M24 34h4M6 14l5-5 14 13M50 14l-5-5-14 13"/>
@@ -883,8 +910,22 @@
       ]}
       function renderChamps(){el('champsGrid').innerHTML=champsCards().map(([letter,name,value,key])=>`<button class="champ ${key!=='none'?'clickable':''}" ${key==='none'?'disabled':''} data-champ="${key}" aria-label="${escapeHTML(name)}: ${escapeHTML(value)}${key!=='none'?'. Tap to change.':''}"><span class="champ-top"><span class="letter">${letter}</span><span class="champ-name">${name}</span></span><span class="champ-value">${escapeHTML(value)}</span></button>`).join('');
         document.querySelectorAll('[data-voice]').forEach(btn=>{const yes=Number(btn.dataset.voice)===current().voice;btn.classList.toggle('selected',yes);btn.setAttribute('aria-pressed',String(yes))});applyVoiceSignal();}
-      function applyVoiceSignal(){const colors=[['#a52f40','#ff9daa'],['#ad771e','#ffe08c'],['#1b8563','#92f0c4'],['#326ead','#a5d0ff'],['#7743af','#d5b2ff']],c=colors[current().voice];
-        el('fittedApp').style.setProperty('--voice-color',c[0]);el('fittedApp').style.setProperty('--voice-edge',c[1]);}
+      function applyVoiceSignal(){
+        const colors=[['#a52f40','#ff9daa'],['#ad771e','#ffe08c'],['#1b8563','#92f0c4'],['#326ead','#a5d0ff'],['#7743af','#d5b2ff']];
+        const c=colors[clamp(Number(current().voice)||0,0,4)],root=el('fittedApp');
+        root.style.setProperty('--voice-color',c[0]);root.style.setProperty('--voice-edge',c[1]);
+        const card=el('champsGrid').querySelector('[data-champ="voice"]');
+        if(card){
+          if(data.settings.stoplight){
+            card.style.setProperty('background',c[0],'important');
+            card.style.setProperty('background-image','none','important');
+            card.style.setProperty('border-color',c[1],'important');
+            card.style.setProperty('border-width','3px','important');
+          }else{
+            for(const key of ['background','background-image','border-color','border-width'])card.style.removeProperty(key);
+          }
+        }
+      }
       function renderScreen(){renderLessonPicker();const s=current();el('lessonTitle').textContent=data.title;el('lessonSub').textContent=data.subtitle;el('currentName').textContent=s.name;el('currentDirections').textContent=s.directions||'Your directions will appear here.';el('activityNumber').textContent=`ACTIVITY ${data.index+1} / ${data.steps.length}`;
         el('nextName').textContent=data.index+1<data.steps.length?data.steps[data.index+1].name:'Lesson complete';
         el('prevStep').disabled=data.index===0;el('nextStep').disabled=data.index===data.steps.length-1;
@@ -905,7 +946,8 @@
         <label class="fieldwrap" style="display:block"><span class="form-label">Student directions</span><textarea class="field" data-stepfield="directions" data-index="${i}" maxlength="600">${escapeHTML(s.directions)}</textarea></label>
         <div class="fieldrow"><label class="fieldwrap"><span class="form-label">Conversation level</span><select class="field" data-stepfield="voice" data-index="${i}">${[0,1,2,3,4].map(n=>`<option value="${n}" ${s.voice===n?'selected':''}>${n} · ${conversationLabel(n)}</option>`).join('')}</select></label><label class="fieldwrap"><span class="form-label">Help</span><select class="field" data-stepfield="help" data-index="${i}">${templateOptions(optionsFor('help'),s.help)}</select></label></div>
         <div class="fieldrow"><label class="fieldwrap"><span class="form-label">Movement</span><select class="field" data-stepfield="move" data-index="${i}">${templateOptions(optionsFor('move'),s.move)}</select></label><label class="fieldwrap"><span class="form-label">Participation</span><select class="field" data-stepfield="participation" data-index="${i}">${templateOptions(optionsFor('participation'),s.participation)}</select></label></div>
-        <label class="fieldwrap" style="display:block"><span class="form-label">Success looks like</span><select class="field" data-stepfield="success" data-index="${i}">${templateOptions(optionsFor('success'),s.success)}</select></label>
+        <div class="fieldrow"><label class="fieldwrap"><span class="form-label">Success looks like</span><select class="field" data-stepfield="success" data-index="${i}">${templateOptions(optionsFor('success'),s.success)}</select></label>
+        <label class="fieldwrap"><span class="form-label">Technology for this activity</span><select class="field" data-stepfield="techStatus" data-index="${i}">${templateOptions(TECH_CHOICES,s.techStatus)}</select></label></div>
       </div>`;}
       function safeFileName(s){return String(s).toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-|-$/g,'').slice(0,55)||'class';}
       // Canvas export is built into this one HTML file, so it works without online image libraries.
@@ -1064,6 +1106,7 @@
       function customChampBox(key,label){return `<label class="fieldwrap" style="display:block"><span class="form-label">${label} · additional choices (one per line)</span><textarea class="field" data-champoptions="${key}" rows="3" maxlength="3100" placeholder="Type one option per line">${escapeHTML(data.settings.champOptions[key].join('\n'))}</textarea></label>`;}
       function renderEditor(){const body=el('drawerBody'),scroll=body.scrollTop,record=activeRecord(),st=data.settings;
         body.innerHTML=`
+        <div class="save-hint" style="margin-top:0;margin-bottom:6px">Running Class Command · Studio 1.3 · Per-activity technology restored</div>
         <div class="form-section" style="margin-top:0">1. Lesson Library</div>
         <div class="lesson-library-box"><span class="library-count">${library.lessons.length} saved lessons · select one to edit or display</span>
         <label class="fieldwrap" style="display:block"><span class="form-label">Saved lesson</span><select class="field" id="libraryPicker">${library.lessons.map(x=>`<option value="${escapeHTML(x.id)}" ${x.id===library.activeId?'selected':''}>${escapeHTML((x.date?x.date+' · ':'')+x.label)}</option>`).join('')}</select></label>
@@ -1085,8 +1128,8 @@
         <label class="checkrow"><input type="checkbox" data-widget="reminder" ${st.widgets.reminder?'checked':''}>Show class reminder</label>
         <label class="fieldwrap" style="display:block"><span class="form-label">Reminder</span><textarea class="field" maxlength="300" data-widgettext="reminderText">${escapeHTML(st.widgets.reminderText)}</textarea></label>
         <label class="checkrow"><input type="checkbox" data-widget="tech" ${st.widgets.tech?'checked':''}>Show technology status</label>
-        <p class="save-hint">The illuminated seatbelt-style sign appears beside Technology Status on the board. Tap the sign during class to cycle through the four laptop expectations.</p>
-        <label class="fieldwrap" style="display:block"><span class="form-label">Technology expectation</span><select class="field" data-widgetchoice="techStatus">${templateOptions(TECH_CHOICES,st.widgets.techStatus)}</select></label>
+        <p class="save-hint">The illuminated seatbelt-style sign automatically follows the current activity. Set each activity's default under Lesson Agenda, or tap the sign during class to change only that activity.</p>
+        <label class="fieldwrap" style="display:block"><span class="form-label">Current activity · technology override</span><select class="field" data-currenttech>${templateOptions(TECH_CHOICES,current().techStatus)}</select></label>
         <div class="form-section">6. Quick Presentation Options</div>
         <details class="settings-details" data-panel="liveActions" ${editorPanelState.liveActions?'open':''}>
           <summary>Live controls · always available in Setup</summary><div class="control-fields">
@@ -1192,8 +1235,8 @@
       el('finishArrange').addEventListener('click',endArrange);
       el('resetLayoutFloating').addEventListener('click',resetWindowLayout);
       el('fourthRow').addEventListener('click',e=>{if(!e.target.closest('#cycleTechStatus'))return;
-        const now=TECH_CHOICES.indexOf(data.settings.widgets.techStatus);data.settings.widgets.techStatus=TECH_CHOICES[(now+1)%TECH_CHOICES.length];
-        persist();renderWidgets();requestFit();notice(data.settings.widgets.techStatus);});
+        const now=TECH_CHOICES.indexOf(current().techStatus);current().techStatus=TECH_CHOICES[(now+1)%TECH_CHOICES.length];
+        persist();renderWidgets();requestFit();notice(current().techStatus);});
       el('agenda').addEventListener('click',e=>{const t=e.target.closest('[data-step]');if(t)chooseStep(Number(t.dataset.step));});
       document.querySelectorAll('[data-time]').forEach(b=>b.addEventListener('click',()=>adjustTime(Number(b.dataset.time))));
       el('toggleTimer').addEventListener('click',toggleTimer);el('resetTimer').addEventListener('click',resetTimer);
@@ -1236,6 +1279,7 @@
           const output=el('size-output-'+t.dataset.textsize);if(output)output.textContent={small:'Small (Standard)',medium:'Medium',large:'Large'}[name];
           persist();applyAppearance();requestFit();return;}
         if(t.dataset.widgettext){data.settings.widgets[t.dataset.widgettext]=t.value.slice(0,300);persist();renderWidgets();requestFit();return;}
+        if(t.dataset.currenttech!==undefined){current().techStatus=TECH_CHOICES.includes(t.value)?t.value:TECH_CHOICES[0];persist();renderWidgets();requestFit();return;}
         if(t.dataset.conversationLabel!==undefined){const i=Number(t.dataset.conversationLabel);if(i>=0&&i<=4){data.settings.conversationLabels[i]=t.value.slice(0,120)||CONVERSATIONS[i];persist();renderScreen();}return;}
         if(t.dataset.general){data[t.dataset.general]=t.value.slice(0,t.maxLength>0?t.maxLength:150);persist();renderScreen();}
         else if(t.dataset.stepfield){const idx=Number(t.dataset.index),f=t.dataset.stepfield;if(!data.steps[idx])return;
@@ -1256,6 +1300,7 @@
         if(t.dataset.appearance==='photoMode'){setPhotoMode(t.checked);renderEditor();return;}
         if(t.dataset.stoplight!==undefined){setStoplight(t.checked);renderEditor();return;}
         if(t.dataset.widget){data.settings.widgets[t.dataset.widget]=t.checked;persist();renderWidgets();requestFit();return;}
+        if(t.dataset.currenttech!==undefined){current().techStatus=TECH_CHOICES.includes(t.value)?t.value:TECH_CHOICES[0];persist();renderWidgets();renderEditor();return;}
         if(t.dataset.widgetchoice){data.settings.widgets[t.dataset.widgetchoice]=t.value;persist();renderWidgets();return;}
         if(t.dataset.pngmode!==undefined){data.settings.pngMode=t.value==='live'?'live':'checklist';persist();return;}
         if(t.dataset.theme!==undefined){data.settings.theme=THEMES[t.value]?t.value:'midnight';persist();applyAppearance();requestFit();return;}
