@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Class Command">
   <meta name="description" content="A touch-first classroom agenda, timer and CHAMPS dashboard.">
-  <title>Class Command Classic · Studio 1.3</title>
+  <title>Class Command Classic · Studio 1.4</title>
   <style>
     :root { color-scheme: dark; --bg:#0b1220; --panel:#162338; --panel2:#1c2c43; --stroke:#31435d; --muted:#aabbd3; --bright:#f7faff; --blue:#93b5ff; --indigo:#7297ef; --mint:#b8e4b5; --red:#ffb0a8; --shadow:0 12px 45px rgba(0,0,0,.22); }
     * { box-sizing:border-box; }
@@ -379,6 +379,67 @@
     .stoplight-on .champ[data-champ="voice"] .letter{background:#ffffff!important;color:var(--voice-color,#a52f40)!important;}
     /* Never display legacy photo instructions, even if imported lesson data contains old notes. */
     .photo-footnote{display:none!important;}
+
+    /* Studio 1.4: theme-derived accents replace fixed blue active/button/CHAMPS colors.
+       Per-section overrides inherit a local palette; stoplight and technology safety
+       colors deliberately remain semantic when enabled. */
+    .fitted-app{
+      --cc-ui-highlight:#344e6e;--cc-ui-border:#a6c5f4;
+      --cc-ui-soft:#273d54;--cc-ui-deep:#334b6a;--cc-ui-badge:#4b6893;
+      --cc-ui-button:#253e59;--cc-ui-button-border:#6687ac;
+    }
+    .fitted-app .step.active{background:var(--cc-ui-highlight);border-color:var(--cc-ui-border);box-shadow:inset 0 0 0 1px var(--cc-ui-border);color:#fff;}
+    .fitted-app .step.done{background:var(--cc-ui-soft);border-color:var(--cc-ui-button-border);}
+    .fitted-app .step-num{background:var(--cc-ui-deep);color:#f7faff;}
+    .fitted-app .step.active .step-num{background:var(--cc-ui-border);color:#1b2130;}
+    .fitted-app .step.done .step-num{background:var(--cc-ui-badge);color:#fff;}
+    .fitted-app .champ{background:var(--cc-ui-soft);border-color:var(--cc-ui-button-border);}
+    .fitted-app .champ.clickable{background:var(--cc-ui-soft);}
+    .fitted-app .champ .letter{background:var(--cc-ui-badge);color:#fff;}
+    .fitted-app .champs-title,.fitted-app .widget-label{color:var(--cc-ui-border);}
+    .fitted-app .dockbtn,.fitted-app .softbtn,.fitted-app .levelbtn{
+      background:var(--cc-ui-button);border-color:var(--cc-ui-button-border);color:#f7faff;
+    }
+    .fitted-app .dockbtn.primary,.fitted-app .dockbtn.warn,
+    .fitted-app .dockbtn.fit-active,.fitted-app .dockbtn.pngbtn,
+    .fitted-app .levelbtn.selected,.fitted-app .stoplight-toggle[aria-pressed="true"]{
+      background:var(--cc-ui-highlight);border-color:var(--cc-ui-border);color:#fff;
+    }
+    .fitted-app .dockbtn.settings{background:var(--cc-ui-deep);border-color:var(--cc-ui-button-border);color:#f7faff;}
+    .fitted-app .controls-tab{background:var(--cc-ui-deep);border-color:var(--cc-ui-border);}
+    .fitted-app .brand-icon{background:var(--cc-ui-deep);color:var(--cc-ui-border);}
+    .fitted-app .appname span{color:var(--cc-ui-border)!important;}
+    .fitted-app .lesson-picker{background:var(--cc-ui-button);border-color:var(--cc-ui-button-border);color:#fff;}
+    .fitted-app .lesson-picker option{background:var(--cc-surface);color:#fff;}
+    .fitted-app .champs-title span{color:var(--cc-ui-border)!important;opacity:.78;}
+    .fitted-app .champs-head .champs-title{color:var(--cc-ui-border);}
+    /* Ultra Purple keeps its signature gradient, but manual widget overrides win. */
+    .fitted-app[data-theme="ultra-purple"] #agendaSection[data-color] .step.active{
+      background:var(--cc-ui-highlight);border-color:var(--cc-ui-border);
+    }
+    .fitted-app[data-theme="ultra-purple"] .dockbtn.settings{
+      background:linear-gradient(135deg,#452367,#68408e);border-color:#9367b7;
+    }
+    .fitted-app[data-theme="ultra-purple"] .champs .letter{background:var(--cc-ui-badge);}
+    /* Stoplight state must remain visible regardless of theme. */
+    .stoplight-on .champ[data-champ="voice"] .letter{
+      background:#fff!important;color:var(--voice-color,#a52f40)!important;
+    }
+    .stoplight-on .champ[data-champ="voice"]{background:var(--voice-color,#a52f40)!important;
+      border-color:var(--voice-edge,#ff9daa)!important;}
+    .fitted-app.stoplight-on [data-voice].selected{
+      background:var(--voice-color,#a52f40)!important;
+      border-color:var(--voice-edge,#ff9daa)!important;color:#fff!important;
+    }
+    /* Setup controls belong to the selected theme, not an independent blue UI. */
+    .drawer .softbtn,.drawer .minibtn,.drawer .dockbtn{
+      background:var(--cc-ui-button,#273c57);border-color:var(--cc-ui-button-border,#59799d);color:#f7faff;
+    }
+    .drawer .dockbtn.primary,.drawer .setup-live-buttons button[aria-pressed="true"]{
+      background:var(--cc-ui-highlight,#365271);border-color:var(--cc-ui-border,#acc8f4);color:#fff;
+    }
+    .drawer .minibtn.danger{background:#573132;border-color:#7b4546;}
+    .drawer .settings-details summary{color:var(--cc-ui-border,#dfebff);}
   </style>
 </head>
 <body>
@@ -387,7 +448,7 @@
     <div class="topline">
       <div class="brand-row">
         <div class="brand-icon" aria-hidden="true">⌁</div>
-        <div><div class="kicker">Teaching dashboard</div><div class="appname">CLASS COMMAND <span style="font-size:.5em;color:#95b4d4;vertical-align:middle">Classic · Studio 1.3</span></div></div>
+        <div><div class="kicker">Teaching dashboard</div><div class="appname">CLASS COMMAND <span style="font-size:.5em;color:#95b4d4;vertical-align:middle">Classic · Studio 1.4</span></div></div>
       </div>
       <div class="meta"><div class="date-line" id="today"></div><div class="clock" id="clock"></div></div>
     </div>
@@ -478,7 +539,7 @@
   <script>
     (function () {
       'use strict';
-      const RELEASE='Studio 1.3 · activity-based technology & stoplight repair';
+      const RELEASE='Studio 1.4 · coordinated themes & timer bell';
       const KEY='class-command-v1-data';
       const LIB_KEY='class-command-classic-library-v2';
       const VIEW_KEY='class-command-classic-view';
@@ -487,7 +548,8 @@
       const SIZE_NAMES={title:'Class / lesson title',subtitle:'Unit / subtitle',agenda:'Agenda cards',activity:'Current activity title',directions:'Current activity directions',timer:'Countdown timer',champs:'CHAMPS cards',clock:'Clock and date',widgets:'Fourth-row widgets',photo:'Photo Mode directions',controls:'Teaching controls'};
       const THEMES={midnight:['#0b1220','#162338','#1c2c43','#31435d','#a9c9ff'],forest:['#091d1d','#163631','#21453e','#44756a','#b5ead3'],ocean:['#0a1c2f','#133651','#1d4561','#396b8b','#a9d9ff'],sunset:['#231b27','#423044','#50394b','#8d6382','#ffc8a9'],rose:['#261729','#49293d','#563348','#94677f','#ffd0e2'], 'ultra-purple':['#190b30','#341651','#472269','#81539f','#ebc9ff']};
       const THEME_LABELS={midnight:'Midnight Blue (Original)',forest:'Forest Green',ocean:'Ocean Blue',sunset:'Evening Sunset',rose:'Rosewood', 'ultra-purple':'Ultra Purple · tribute edition'};
-      const WIDGET_COLORS={theme:'Follow overall theme',purple:'Purple',teal:'Teal',green:'Green',rose:'Rose',amber:'Amber',cobalt:'Cobalt'};
+      const WIDGET_COLORS={theme:'Theme',purple:'Purple',teal:'Teal',green:'Green',rose:'Rose',amber:'Amber',cobalt:'Cobalt'};
+      const WIDGET_PALETTES={purple:['#1a102d','#322043','#4a2c60','#81569f','#e0b6ff'],teal:['#0d262b','#193a42','#25515a','#4c8392','#a9e9e8'],green:['#0c271e','#1c3e32','#285744','#4f8b71','#b8ebcb'],rose:['#291727','#46273e','#603953','#a36d91','#ffd0e6'],amber:['#2b2316','#463520','#65502d','#a98949','#ffe0a0'],cobalt:['#102044','#1d3161','#2c4a84','#5681bd','#c0dcff']};
       const DEFAULT_CHAMP_OPTIONS={help:[],move:[],participation:[],success:[]};
       const TECH_CHOICES=['Laptop closed','Laptop in your bag','Laptops out','Laptops & wired earbuds allowed'];
       const OLD_TECH_MAP={'Laptops closed':'Laptop closed','Laptops permitted':'Laptops out','Laptops + wired earbuds':'Laptops & wired earbuds allowed','No technology':'Laptop in your bag','Teacher directions only':'Laptop closed'};
@@ -511,6 +573,7 @@
           champOptions:Object.fromEntries(Object.keys(DEFAULT_CHAMP_OPTIONS).map(k=>[k,Array.isArray((x.champOptions||{})[k])?[...new Set(x.champOptions[k].filter(v=>typeof v==='string').map(v=>v.trim().slice(0,120)).filter(Boolean))].slice(0,25):[]])),
           widgets:(()=>{const w={...DEFAULT_WIDGETS,...(x.widgets||{})};w.techStatus=OLD_TECH_MAP[w.techStatus]||w.techStatus;
             if(!TECH_CHOICES.includes(w.techStatus))w.techStatus=TECH_CHOICES[0];return w;})(),layout:cleanLayout(x.layout),stoplight:x.stoplight!==false,pngMode:x.pngMode==='live'?'live':'checklist',
+          bellEnabled:x.bellEnabled===true,bellVolume:['quiet','normal','loud'].includes(x.bellVolume)?x.bellVolume:'normal',
           conversationLabels:CONVERSATIONS.map((standard,i)=>typeof (x.conversationLabels||[])[i]==='string'?x.conversationLabels[i].slice(0,120)||standard:standard)};
       }
 
@@ -745,7 +808,50 @@
       }
       function current(){return data.steps[data.index]}
       function secondsLeft(){return timer.running?Math.max(0,Math.ceil((timer.endsAt-Date.now())/1000)):timer.seconds;}
-      function tick(){if(timer.running&&secondsLeft()<=0){timer.running=false;timer.seconds=0;timer.endsAt=null;persist();notice('Time is up!')}renderTimer();}
+      // The bell is synthesized locally; no files, network requests or copyrighted audio.
+      // iPad Safari requires an actual teacher tap to unlock audio. Starting or testing
+      // the timer provides that gesture; a page left in the background may ring late.
+      let bellContext=null;
+      function unlockBellAudio(){
+        if(!data.settings.bellEnabled)return;
+        try{
+          const AudioCtor=window.AudioContext||window.webkitAudioContext;
+          if(!AudioCtor)return;
+          if(!bellContext)bellContext=new AudioCtor();
+          if(bellContext.state==='suspended')void bellContext.resume().catch(()=>{});
+        }catch(e){console.warn('Timer bell audio unavailable',e);}
+      }
+      function soundBell(){
+        if(!data.settings.bellEnabled)return;
+        try{
+          if(!bellContext||bellContext.state!=='running')return;
+          const ctx=bellContext,now=ctx.currentTime;
+          const volume={quiet:.045,normal:.095,loud:.17}[data.settings.bellVolume]||.095;
+          // A gentle two-strike classroom chime, with bell-like harmonic decay.
+          [0,.23].forEach((delay,strike)=>{
+            [783.99,1175.0,1567.98].forEach((frequency,i)=>{
+              const oscillator=ctx.createOscillator(),gain=ctx.createGain();
+              oscillator.type='sine';oscillator.frequency.setValueAtTime(frequency,now+delay);
+              const amp=volume*[1,.35,.14][i]*(strike?.75:1);
+              gain.gain.setValueAtTime(.0001,now+delay);
+              gain.gain.exponentialRampToValueAtTime(amp,now+delay+.018);
+              gain.gain.exponentialRampToValueAtTime(.0001,now+delay+1.15);
+              oscillator.connect(gain);gain.connect(ctx.destination);
+              oscillator.start(now+delay);oscillator.stop(now+delay+1.18);
+            });
+          });
+        }catch(e){console.warn('Unable to play classroom bell',e);}
+      }
+      function testBell(){
+        if(!data.settings.bellEnabled){notice('Turn on the timer bell first');return;}
+        unlockBellAudio();
+        // resume() is async on Safari; play after it settles, within the user gesture.
+        if(bellContext){
+          Promise.resolve(bellContext.resume()).then(()=>soundBell()).catch(()=>notice('Browser blocked sound. Tap Test bell again.'));
+          notice('Bell preview');
+        }else notice('Audio unavailable in this browser');
+      }
+      function tick(){if(timer.running&&secondsLeft()<=0){timer.running=false;timer.seconds=0;timer.endsAt=null;persist();soundBell();notice('Time is up!')}renderTimer();}
       function formatTime(s){s=Math.max(0,Math.ceil(s));return `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`}
       function renderTimer(){const s=secondsLeft();el('digits').textContent=formatTime(s);el('digits').classList.toggle('finished',s===0);el('timerStatus').textContent=timer.running?'Running':s===0?'Time is up':'Paused / ready';el('timerStatus').classList.toggle('finished',s===0);el('toggleTimer').textContent=timer.running?'Ⅱ Pause':'▶ Start';
         const quickTime=el('quickTimerRemaining'),quickButton=document.querySelector('[data-quick="timer"]');
@@ -785,14 +891,39 @@
         el('fourthRow').hidden=parts.length===0;
         el('fourthRow').innerHTML=parts.join('');
       }
+      function blendHex(base,accent,part){
+        const b=base.replace('#',''),a=accent.replace('#','');
+        return '#'+[0,2,4].map(i=>{
+          const x=parseInt(b.slice(i,i+2),16),y=parseInt(a.slice(i,i+2),16);
+          return Math.round(x*(1-part)+y*part).toString(16).padStart(2,'0');
+        }).join('');
+      }
+      function applyAccentPalette(element,palette){
+        const values={
+          '--cc-ui-highlight':blendHex(palette[2],palette[4],.26),
+          '--cc-ui-border':blendHex(palette[3],palette[4],.50),
+          '--cc-ui-soft':blendHex(palette[2],palette[4],.10),
+          '--cc-ui-deep':blendHex(palette[1],palette[4],.20),
+          '--cc-ui-badge':blendHex(palette[2],palette[4],.43),
+          '--cc-ui-button':blendHex(palette[1],palette[4],.13),
+          '--cc-ui-button-border':blendHex(palette[3],palette[4],.20),
+        };
+        for(const [key,value] of Object.entries(values))element.style.setProperty(key,value);
+      }
       function applyAppearance(){
         const root=el('fittedApp'),st=data.settings,t=THEMES[st.theme];
         root.dataset.theme=st.theme;
         ['--cc-bg','--cc-surface','--cc-card','--cc-line','--cc-accent'].forEach((prop,i)=>root.style.setProperty(prop,t[i]));
+        applyAccentPalette(root,t);
+        applyAccentPalette(document.documentElement,t); // Setup lives outside the teaching display.
         for(const key of SIZE_KEYS){const v={small:1,medium:1.16,large:1.32}[st.textSizes[key]]||1;root.style.setProperty('--cc-type-'+key,String(v));}
         for(const [area,id] of Object.entries({header:'lessonRow',agenda:'agendaSection',focus:null,timer:'timerPanel',champs:'champsSection',fourth:'fourthRow',dock:null})){
           const element=id?el(id):area==='focus'?document.querySelector('.focus'):document.querySelector('.dock');
-          const value=st.colors[area];if(value==='theme')element.removeAttribute('data-color');else element.dataset.color=value;
+          const value=st.colors[area];
+          if(value==='theme')element.removeAttribute('data-color');else element.dataset.color=value;
+          // Reset inherited overrides when returning to Theme.
+          for(const prop of ['--cc-ui-highlight','--cc-ui-border','--cc-ui-soft','--cc-ui-deep','--cc-ui-badge','--cc-ui-button','--cc-ui-button-border'])element.style.removeProperty(prop);
+          if(value!=='theme'&&WIDGET_PALETTES[value])applyAccentPalette(element,WIDGET_PALETTES[value]);
         }
         root.classList.toggle('stoplight-on',st.stoplight);applyVoiceSignal();
         el('stoplightToggle').setAttribute('aria-pressed',String(st.stoplight));
@@ -933,9 +1064,9 @@
         el('screen').classList.toggle('simple',!!data.settings.simple);renderControls();
         if(!data.settings.showTimer){document.querySelector('.stage').style.gridTemplateColumns='1fr'}else{document.querySelector('.stage').style.gridTemplateColumns=''}
         applyAppearance();renderWidgets();renderPhotoList();renderAgenda();renderChamps();renderTimer();renderClock();applyWindowLayout();requestFit();}
-      function chooseStep(index){index=clamp(index,0,data.steps.length-1);if(index===data.index)return;data.index=index;timer={seconds:current().minutes*60,running:!!data.settings.autoStart,endsAt:data.settings.autoStart?Date.now()+current().minutes*60000:null};persist();renderScreen();notice(current().name);}
+      function chooseStep(index){index=clamp(index,0,data.steps.length-1);if(index===data.index)return;unlockBellAudio();data.index=index;timer={seconds:current().minutes*60,running:!!data.settings.autoStart,endsAt:data.settings.autoStart?Date.now()+current().minutes*60000:null};persist();renderScreen();notice(current().name);}
       function adjustTime(change){const n=clamp(secondsLeft()+change,0,10800);timer.seconds=n;if(timer.running){timer.endsAt=Date.now()+n*1000;if(n===0){timer.running=false;timer.endsAt=null}}persist();renderTimer();}
-      function toggleTimer(){if(timer.running){timer.seconds=secondsLeft();timer.running=false;timer.endsAt=null;}else {if(secondsLeft()===0)timer.seconds=current().minutes*60;timer.running=true;timer.endsAt=Date.now()+timer.seconds*1000;}persist();renderTimer();}
+      function toggleTimer(){unlockBellAudio();if(timer.running){timer.seconds=secondsLeft();timer.running=false;timer.endsAt=null;}else {if(secondsLeft()===0)timer.seconds=current().minutes*60;timer.running=true;timer.endsAt=Date.now()+timer.seconds*1000;}persist();renderTimer();}
       function resetTimer(){timer.seconds=current().minutes*60;timer.running=false;timer.endsAt=null;persist();renderTimer();notice('Timer reset to '+current().minutes+' minutes');}
       function setVoice(v){current().voice=clamp(v,0,4);persist();renderChamps();notice('Conversation: Level '+current().voice);}
       function cycle(key){if(key==='none')return;if(key==='voice'){setVoice((current().voice+1)%5);return;}const opts=optionsFor(key);if(!opts)return;const pos=opts.indexOf(current()[key]);current()[key]=opts[(pos+1)%opts.length];persist();renderChamps();notice(current()[key]);}
@@ -1106,7 +1237,7 @@
       function customChampBox(key,label){return `<label class="fieldwrap" style="display:block"><span class="form-label">${label} · additional choices (one per line)</span><textarea class="field" data-champoptions="${key}" rows="3" maxlength="3100" placeholder="Type one option per line">${escapeHTML(data.settings.champOptions[key].join('\n'))}</textarea></label>`;}
       function renderEditor(){const body=el('drawerBody'),scroll=body.scrollTop,record=activeRecord(),st=data.settings;
         body.innerHTML=`
-        <div class="save-hint" style="margin-top:0;margin-bottom:6px">Running Class Command · Studio 1.3 · Per-activity technology restored</div>
+        <div class="save-hint" style="margin-top:0;margin-bottom:6px">Running Class Command · Studio 1.4 · Theme polish + optional bell</div>
         <div class="form-section" style="margin-top:0">1. Lesson Library</div>
         <div class="lesson-library-box"><span class="library-count">${library.lessons.length} saved lessons · select one to edit or display</span>
         <label class="fieldwrap" style="display:block"><span class="form-label">Saved lesson</span><select class="field" id="libraryPicker">${library.lessons.map(x=>`<option value="${escapeHTML(x.id)}" ${x.id===library.activeId?'selected':''}>${escapeHTML((x.date?x.date+' · ':'')+x.label)}</option>`).join('')}</select></label>
@@ -1166,6 +1297,13 @@
         <label class="checkrow"><input type="checkbox" data-appearance="photoMode" ${photoMode?'checked':''}>Show all-directions Photo Mode now</label>
         <label class="checkrow"><input type="checkbox" data-appearance="toolbarHidden" ${toolbarHidden?'checked':''}>Keep bottom controls collapsed</label>
         <label class="checkrow"><input type="checkbox" data-setting="autoStart" ${st.autoStart?'checked':''}>Auto-start the timer when changing activities</label>
+        <div class="setup-live-group"><div class="setup-live-head">Timer bell</div>
+          <label class="checkrow"><input type="checkbox" data-setting="bellEnabled" ${st.bellEnabled?'checked':''}>Play a gentle bell at 00:00</label>
+          <div class="fieldrow" style="align-items:end"><label class="fieldwrap"><span class="form-label">Bell volume</span>
+          <select class="field" data-bellvolume><option value="quiet" ${st.bellVolume==='quiet'?'selected':''}>Quiet</option><option value="normal" ${st.bellVolume==='normal'?'selected':''}>Normal</option><option value="loud" ${st.bellVolume==='loud'?'selected':''}>Loud</option></select></label>
+          <div class="fieldwrap"><button type="button" class="softbtn" id="testBell" ${st.bellEnabled?'':'disabled'}>♪ Test bell</button></div></div>
+          <p class="save-hint">Tap Test bell or Start timer once on your iPad to enable sound. Keep the screen awake; background tabs can delay the bell.</p>
+        </div>
         <div class="fieldrow"><div><label class="checkrow"><input type="checkbox" data-setting="showAgenda" ${st.showAgenda?'checked':''}>Show agenda</label><label class="checkrow"><input type="checkbox" data-setting="showChamps" ${st.showChamps?'checked':''}>Show CHAMPS</label><label class="checkrow"><input type="checkbox" data-setting="showNext" ${st.showNext?'checked':''}>Show next activity</label></div><div><label class="checkrow"><input type="checkbox" data-setting="showTimer" ${st.showTimer?'checked':''}>Show timer</label><label class="checkrow"><input type="checkbox" data-setting="showClock" ${st.showClock?'checked':''}>Show clock</label></div></div>
         <label class="fieldwrap" style="display:block"><span class="form-label">Save PNG as</span><select class="field" data-pngmode><option value="checklist" ${st.pngMode==='checklist'?'selected':''}>Photo Mode checklist · all directions (recommended)</option><option value="live" ${st.pngMode==='live'?'selected':''}>Classic live board · current directions only</option></select></label>
         <div class="form-section">7. Customization</div>
@@ -1174,7 +1312,7 @@
           <p class="save-hint">Ultra Purple uses a special layered purple gradient to honor the encouragement that helped this project grow.</p>
           <div class="form-label" style="margin:18px 0 8px">Choose colors for individual screen areas</div>
           <div class="fieldrow">${widgetColorSelector('header','Lesson title area')}${widgetColorSelector('agenda','Agenda section')}${widgetColorSelector('focus','Current activity')}${widgetColorSelector('timer','Timer')}${widgetColorSelector('champs','CHAMPS')}${widgetColorSelector('fourth','Fourth-row widgets')}${widgetColorSelector('dock','Bottom controls')}</div>
-          <p class="save-hint">Choose “Follow overall theme” to restore a section to the main palette.</p></div></details>
+          <p class="save-hint">Choose “Theme” to make a section match the main palette.</p></div></details>
         <details class="settings-details" data-panel="layout" ${editorPanelState.layout?'open':''}><summary>Layout and Screen Fit</summary><div class="control-fields">
           <label class="checkrow"><input type="checkbox" data-setting="autoFit" ${st.autoFit?'checked':''}>Automatically fit the teaching dashboard on screen</label>
           <p class="save-hint">Use A−, A+ or Fit on the bottom bar or in Quick Presentation Options to adjust the whole board. Photo Mode lets very long checklists scroll rather than shrinking everything until the text becomes unreadable.</p>
@@ -1303,6 +1441,7 @@
         if(t.dataset.currenttech!==undefined){current().techStatus=TECH_CHOICES.includes(t.value)?t.value:TECH_CHOICES[0];persist();renderWidgets();renderEditor();return;}
         if(t.dataset.widgetchoice){data.settings.widgets[t.dataset.widgetchoice]=t.value;persist();renderWidgets();return;}
         if(t.dataset.pngmode!==undefined){data.settings.pngMode=t.value==='live'?'live':'checklist';persist();return;}
+        if(t.dataset.bellvolume!==undefined){data.settings.bellVolume=['quiet','normal','loud'].includes(t.value)?t.value:'normal';persist();return;}
         if(t.dataset.theme!==undefined){data.settings.theme=THEMES[t.value]?t.value:'midnight';persist();applyAppearance();requestFit();return;}
         if(t.dataset.area){data.settings.colors[t.dataset.area]=WIDGET_COLORS[t.value]?t.value:'theme';persist();applyAppearance();return;}
         if(t.dataset.champoptions){const key=t.dataset.champoptions;data.settings.champOptions[key]=[...new Set(t.value.split(/\r?\n/).map(x=>x.trim().slice(0,120)).filter(Boolean))].slice(0,25);persist();renderScreen();renderEditor();return;}
@@ -1310,7 +1449,7 @@
         if(t.dataset.layoutwidth){const name=t.dataset.layoutwidth;if(PANEL_NAMES[name]){
           data.settings.layout.enabled=true;data.settings.layout.items[name].span=clamp(Number(t.value),3,12);
           persist();renderScreen();}return;}
-        if(t.dataset.setting){data.settings[t.dataset.setting]=t.checked;persist();renderScreen();}
+        if(t.dataset.setting){data.settings[t.dataset.setting]=t.checked;if(t.dataset.setting==='bellEnabled'&&t.checked)unlockBellAudio();persist();renderScreen();if(t.dataset.setting==='bellEnabled')renderEditor();}
         if(t.dataset.control){data.settings.controls.show[t.dataset.control]=t.checked;persist();renderScreen();}
         if(t.dataset.increment){const n=clamp(Math.round(Number(t.value)||1),1,30);t.value=n;data.settings.controls.increments[t.dataset.increment]=n;persist();renderControls();requestFit();}
       });
@@ -1344,6 +1483,7 @@
         }
         if(t.id==='openArrange'){startArrange();return;}
         if(t.id==='resetWindowLayout'){resetWindowLayout();return;}
+        if(t.id==='testBell'){testBell();return;}
         if(t.id==='touchTest'){const status=el('touchResult');if(status)status.textContent='Click received. If you used a finger, this device is sending touch events.';return;}
         if(t.id==='addLesson'){addLesson(false);return;}
         if(t.id==='duplicateLesson'){addLesson(true);return;}
