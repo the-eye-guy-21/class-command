@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Class Command">
   <meta name="description" content="A touch-first classroom agenda, timer and CHAMPS dashboard.">
-  <title>Class Command Classic · Studio 1.5</title>
+  <title>Class Command Classic · Studio 1.5.1</title>
   <style>
     :root { color-scheme: dark; --bg:#0b1220; --panel:#162338; --panel2:#1c2c43; --stroke:#31435d; --muted:#aabbd3; --bright:#f7faff; --blue:#93b5ff; --indigo:#7297ef; --mint:#b8e4b5; --red:#ffb0a8; --shadow:0 12px 45px rgba(0,0,0,.22); }
     * { box-sizing:border-box; }
@@ -471,6 +471,16 @@
     [data-color="yellow"]{background:linear-gradient(135deg,#534319,#78632a)!important;border-color:#f3d27b!important;}
     [data-color="maroon"]{background:linear-gradient(135deg,#491b2b,#6c293b)!important;border-color:#cb8194!important;}
     [data-color="sunset-gradient"]{background:linear-gradient(125deg,#48243c,#85505b,#ad6259)!important;border-color:#edab98!important;}
+    /* Studio 1.5.1: a more discoverable Lesson Setup action, even in fullscreen.
+       Both the gear and its label are one large touch target. */
+    .brand-setup{display:inline-flex;align-items:center;justify-content:center;gap:9px;
+      width:auto;height:53px;min-width:0;padding:6px 13px 6px 10px;border-radius:14px;
+      white-space:nowrap;flex-shrink:0;line-height:1;}
+    .brand-setup .gear-symbol{font-size:32px;line-height:1;font-weight:900;}
+    .brand-setup .gear-caption{font-size:clamp(12px,1.33vw,15px);font-weight:850;line-height:1.06;letter-spacing:.1px;}
+    .quick-edit[title]{cursor:pointer;}
+    [data-color="bright-orange"]{background:linear-gradient(135deg,#592307,#ac4a10)!important;border-color:#ffad61!important;}
+    [data-color="bright-yellow"]{background:linear-gradient(135deg,#5b4608,#94700c)!important;border-color:#ffdf63!important;}
     /* Special gradients, retained independently of Ultra Purple. */
     .fitted-app[data-theme="sunset-gradient"]{background:linear-gradient(138deg,#2a1329 0%,#53314c 50%,#965351 100%);}
     .fitted-app[data-theme="sunset-gradient"] .focus,.fitted-app[data-theme="sunset-gradient"] .timer-panel,
@@ -486,13 +496,13 @@
   <main class="screen" id="screen">
     <div class="topline">
       <div class="brand-row">
-        <button type="button" class="brand-icon brand-setup" id="openBrandSetup" title="Open Setup (works in fullscreen)" aria-label="Open Class Command Setup">⚙</button>
-        <div><div class="kicker">Teaching dashboard</div><div class="appname">CLASS COMMAND <span style="font-size:.5em;color:#95b4d4;vertical-align:middle">Classic · Studio 1.5</span></div></div>
+        <button type="button" class="brand-icon brand-setup" id="openBrandSetup" title="Open Lesson Setup (including fullscreen)" aria-label="Open Lesson Setup"><span class="gear-symbol" aria-hidden="true">⚙</span><span class="gear-caption">Lesson Setup</span></button>
+        <div><div class="kicker">Teaching dashboard</div><div class="appname">CLASS COMMAND <span style="font-size:.5em;color:#95b4d4;vertical-align:middle">Classic · Studio 1.5.1</span></div></div>
       </div>
       <div class="meta"><div class="date-line" id="today"></div><div class="clock" id="clock"></div></div>
     </div>
     <div class="lesson-row" id="lessonRow">
-      <div class="lesson-headings" style="min-width:0"><div><div class="lesson-title" id="lessonTitle"></div><div class="lesson-sub" id="lessonSub"></div></div><button type="button" class="quick-edit" data-edit-section="setupTitleSection" title="Edit lesson title and subtitle" aria-label="Edit lesson title and subtitle">✎</button></div>
+      <div class="lesson-headings" style="min-width:0"><div><div class="lesson-title" id="lessonTitle"></div><div class="lesson-sub" id="lessonSub"></div></div><button type="button" class="quick-edit" data-edit-section="setupTitleSection" title="Click to edit" aria-label="Edit lesson title and subtitle">✎</button></div>
       <div class="lesson-picker-row"><label class="lesson-picker-label" for="lessonPicker">Saved lesson</label><select class="lesson-picker" id="lessonPicker" aria-label="Switch saved lesson"></select></div>
     </div>
     <section class="photo-sheet" id="photoSheet" aria-label="Full-lesson checklist" hidden>
@@ -500,17 +510,17 @@
       <div class="photo-list" id="photoList"></div>
     </section>
     <section class="agenda-section" id="agendaSection" aria-label="Lesson agenda">
-      <div class="section-label"><span>Lesson agenda · tap to jump <button type="button" class="quick-edit" data-edit-section="setupAgendaSection" title="Edit agenda" aria-label="Edit agenda">✎</button></span><span id="progressLabel"></span></div>
+      <div class="section-label"><span>Lesson agenda · tap to jump <button type="button" class="quick-edit" data-edit-section="setupAgendaSection" title="Click to edit" aria-label="Edit agenda">✎</button></span><span id="progressLabel"></span></div>
       <div class="agenda" id="agenda"></div>
     </section>
     <div class="stage">
       <section class="focus" aria-label="Current activity">
-        <div><div class="focus-top"><span class="focus-tag">● Now in progress</span><span class="focus-count" id="activityNumber"></span><button type="button" class="quick-edit" data-edit-section="setupAgendaSection" title="Edit activity" aria-label="Edit current activity">✎</button></div>
+        <div><div class="focus-top"><span class="focus-tag">● Now in progress</span><span class="focus-count" id="activityNumber"></span><button type="button" class="quick-edit" data-edit-section="setupAgendaSection" title="Click to edit" aria-label="Edit current activity">✎</button></div>
           <h1 class="focus-name" id="currentName"></h1><div class="focus-directions" id="currentDirections"></div></div>
         <div class="focus-footer" id="nextActivity"><div><span class="next-label">Up next</span><span class="next-name" id="nextName"></span></div><span style="color:#9eb6d7">→</span></div>
       </section>
       <section class="timer-panel" id="timerPanel" aria-label="Activity countdown timer">
-        <div class="timer-heading"><span>Activity timer</span><span class="timer-status" id="timerStatus">Ready</span><button type="button" class="quick-edit" data-edit-section="setupAgendaSection" title="Edit activity timer" aria-label="Edit activity timer preset">✎</button></div>
+        <div class="timer-heading"><span>Activity timer</span><span class="timer-status" id="timerStatus">Ready</span><button type="button" class="quick-edit" data-edit-section="setupAgendaSection" title="Click to edit" aria-label="Edit activity timer preset">✎</button></div>
         <div class="digits" id="digits" role="timer" aria-label="Time remaining">10:00</div>
         <div class="timer-buttons">
           <button class="softbtn" id="timerStart" type="button" aria-label="Start countdown">▶ Start</button>
@@ -523,7 +533,7 @@
     </div>
     <section class="fourth-row" id="fourthRow" aria-label="Optional classroom widgets" hidden></section>
     <section class="champs" id="champsSection" aria-label="CHAMPS activity expectations">
-      <div class="champs-head"><div class="champs-title">CHAMPS <span style="font-weight:450;color:#8ea7c8">/ Current expectations</span> <button type="button" class="quick-edit" data-edit-section="setupAgendaSection" title="Edit CHAMPS expectations" aria-label="Edit CHAMPS expectations">✎</button></div><div class="champs-help">Tap a card to cycle its expectation</div></div>
+      <div class="champs-head"><div class="champs-title">CHAMPS <span style="font-weight:450;color:#8ea7c8">/ Current expectations</span> <button type="button" class="quick-edit" data-edit-section="setupAgendaSection" title="Click to edit" aria-label="Edit CHAMPS expectations">✎</button></div><div class="champs-help">Tap a card to cycle its expectation</div></div>
       <div class="champs-grid" id="champsGrid"></div>
     </section>
   </main>
@@ -554,7 +564,7 @@
         <button class="dockbtn settings utility" id="focusToggle" title="Toggle simplified display">Focus</button>
         <button class="dockbtn pngbtn utility" id="savePng" title="Save a clean image of the classroom board">↓ PNG</button>
         <button class="dockbtn settings utility" id="fullScreenBtn" title="Expand the display">⛶ Full Screen</button>
-        <button class="dockbtn settings utility" id="openSetup">⚙ Setup</button>
+        <button class="dockbtn settings utility" id="openSetup">⚙ Lesson Setup</button>
         <button class="dockbtn settings utility" id="hideDock" title="Hide the bottom teaching controls">Hide bar ▾</button>
       </div>
     </div>
@@ -579,7 +589,7 @@
   <script>
     (function () {
       'use strict';
-      const RELEASE='Studio 1.5 · fullscreen, themes, timer and widgets';
+      const RELEASE='Studio 1.5.1 · lesson setup labels and bright themes';
       const KEY='class-command-v1-data';
       const LIB_KEY='class-command-classic-library-v2';
       const VIEW_KEY='class-command-classic-view';
@@ -594,16 +604,18 @@
         sunset:['#231b27','#423044','#50394b','#8d6382','#ffc8a9'],
         'sunset-gradient':['#291629','#482b41','#653953','#bd746b','#ffdfae'],
         orange:['#241608','#3e2614','#57371e','#ae7243','#ffdab0'],
+        'bright-orange':['#250f06','#552008','#83360e','#f17b20','#ffcf98'],
         yellow:['#261f0e','#3d3217','#554620','#a48c40','#ffecab'],
+        'bright-yellow':['#242008','#493808','#75600d','#ecc21c','#fff3a1'],
         maroon:['#1d0d15','#381725','#522636','#965366','#ffc0ce'],
         rose:['#261729','#49293d','#563348','#94677f','#ffd0e2'],
         'vibrant-pink':['#2c0e27','#551748','#77285d','#c5599b','#ffd2ee'],
         'dusty-purple':['#1d1a2b','#342d45','#50445e','#86779c','#e6dafa'],
         'ultra-purple':['#190b30','#341651','#472269','#81539f','#ebc9ff']
       };
-      const THEME_LABELS={midnight:'Midnight Blue (Original)',forest:'Forest Green','light-green':'Soft Sage Green',ocean:'Ocean Blue',sunset:'Evening Sunset','sunset-gradient':'Sunset Gradient',orange:'Warm Orange',yellow:'Golden Yellow',maroon:'Deep Maroon',rose:'Dusty Pink (formerly Rosewood)','vibrant-pink':'Vibrant Pink','dusty-purple':'Dusty Purple', 'ultra-purple':'Ultra Purple · tribute edition'};
-      const WIDGET_COLORS={theme:'Theme',purple:'Dusty Purple',teal:'Teal',green:'Forest Green','light-green':'Soft Sage Green',rose:'Dusty Pink','vibrant-pink':'Vibrant Pink',amber:'Amber',orange:'Orange',yellow:'Golden Yellow',maroon:'Deep Maroon',cobalt:'Cobalt','sunset-gradient':'Sunset Gradient'};
-      const WIDGET_PALETTES={purple:['#1d1a2b','#342d45','#50445e','#86779c','#e6dafa'],teal:['#0d262b','#193a42','#25515a','#4c8392','#a9e9e8'],green:['#0c271e','#1c3e32','#285744','#4f8b71','#b8ebcb'],'light-green':THEMES['light-green'],rose:['#291727','#46273e','#603953','#a36d91','#ffd0e6'],'vibrant-pink':THEMES['vibrant-pink'],amber:['#2b2316','#463520','#65502d','#a98949','#ffe0a0'],orange:THEMES.orange,yellow:THEMES.yellow,maroon:THEMES.maroon,cobalt:['#102044','#1d3161','#2c4a84','#5681bd','#c0dcff'],'sunset-gradient':THEMES['sunset-gradient']};
+      const THEME_LABELS={midnight:'Midnight Blue (Original)',forest:'Forest Green','light-green':'Soft Sage Green',ocean:'Ocean Blue',sunset:'Evening Sunset','sunset-gradient':'Sunset Gradient',orange:'Warm Orange','bright-orange':'Bright Orange',yellow:'Golden Yellow','bright-yellow':'Sunshine Yellow',maroon:'Deep Maroon',rose:'Dusty Pink (formerly Rosewood)','vibrant-pink':'Vibrant Pink','dusty-purple':'Dusty Purple', 'ultra-purple':'Ultra Purple · tribute edition'};
+      const WIDGET_COLORS={theme:'Theme',purple:'Dusty Purple',teal:'Teal',green:'Forest Green','light-green':'Soft Sage Green',rose:'Dusty Pink','vibrant-pink':'Vibrant Pink',amber:'Amber',orange:'Orange','bright-orange':'Bright Orange',yellow:'Golden Yellow','bright-yellow':'Sunshine Yellow',maroon:'Deep Maroon',cobalt:'Cobalt','sunset-gradient':'Sunset Gradient'};
+      const WIDGET_PALETTES={purple:['#1d1a2b','#342d45','#50445e','#86779c','#e6dafa'],teal:['#0d262b','#193a42','#25515a','#4c8392','#a9e9e8'],green:['#0c271e','#1c3e32','#285744','#4f8b71','#b8ebcb'],'light-green':THEMES['light-green'],rose:['#291727','#46273e','#603953','#a36d91','#ffd0e6'],'vibrant-pink':THEMES['vibrant-pink'],amber:['#2b2316','#463520','#65502d','#a98949','#ffe0a0'],orange:THEMES.orange,'bright-orange':THEMES['bright-orange'],yellow:THEMES.yellow,'bright-yellow':THEMES['bright-yellow'],maroon:THEMES.maroon,cobalt:['#102044','#1d3161','#2c4a84','#5681bd','#c0dcff'],'sunset-gradient':THEMES['sunset-gradient']};
       const DEFAULT_CHAMP_OPTIONS={help:[],move:[],participation:[],success:[]};
       const TECH_CHOICES=['Laptop closed','Laptop in your bag','Laptops out','Laptops & wired earbuds allowed'];
       const OLD_TECH_MAP={'Laptops closed':'Laptop closed','Laptops permitted':'Laptops out','Laptops + wired earbuds':'Laptops & wired earbuds allowed','No technology':'Laptop in your bag','Teacher directions only':'Laptop closed'};
@@ -963,7 +975,7 @@
         el('fourthRow').hidden=parts.length===0;
         el('fourthRow').style.setProperty('--widget-count',String(Math.max(1,parts.length)));
         el('fourthRow').dataset.widgetCount=String(parts.length);
-        el('fourthRow').innerHTML=parts.join('')+(parts.length?'<button type="button" class="quick-edit fourth-edit" data-edit-section="setupWidgetsSection" title="Edit fourth-row widgets" aria-label="Edit fourth-row widgets">✎</button>':'');
+        el('fourthRow').innerHTML=parts.join('')+(parts.length?'<button type="button" class="quick-edit fourth-edit" data-edit-section="setupWidgetsSection" title="Click to edit" aria-label="Edit fourth-row widgets">✎</button>':'');
       }
       function blendHex(base,accent,part){
         const b=base.replace('#',''),a=accent.replace('#','');
