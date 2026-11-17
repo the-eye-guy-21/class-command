@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Class Command">
   <meta name="description" content="A touch-first classroom agenda, timer and CHAMPS dashboard.">
-  <title>Class Command Classic · Studio 1.4.1</title>
+  <title>Class Command Classic · Studio 1.5</title>
   <style>
     :root { color-scheme: dark; --bg:#0b1220; --panel:#162338; --panel2:#1c2c43; --stroke:#31435d; --muted:#aabbd3; --bright:#f7faff; --blue:#93b5ff; --indigo:#7297ef; --mint:#b8e4b5; --red:#ffb0a8; --shadow:0 12px 45px rgba(0,0,0,.22); }
     * { box-sizing:border-box; }
@@ -444,6 +444,41 @@
     }
     .drawer .minibtn.danger{background:#573132;border-color:#7b4546;}
     .drawer .settings-details summary{color:var(--cc-ui-border,#dfebff);}
+
+
+    /* Studio 1.5: always accessible Setup, quick editing, and proportional widgets. */
+    .brand-setup{cursor:pointer;border:1px solid var(--cc-ui-border,#6c90bb);font:inherit;min-height:43px;touch-action:manipulation;}
+    .brand-setup:hover,.brand-setup:focus-visible{box-shadow:0 0 0 2px var(--cc-ui-border,#a9c9ff);}
+    .lesson-headings{display:flex;align-items:center;gap:10px;min-width:0;}
+    .quick-edit{display:inline-grid;place-items:center;flex:none;min-width:30px;min-height:30px;
+      background:var(--cc-ui-button,#293a58);border:1px solid var(--cc-ui-button-border,#5d7ca1);
+      border-radius:10px;color:#fff;font-size:17px;line-height:1;cursor:pointer;margin:0 4px;vertical-align:middle;}
+    .quick-edit:hover,.quick-edit:focus-visible{background:var(--cc-ui-highlight,#456189);}
+    .section-label .quick-edit{margin-left:8px;}
+    .fitted-app.is-fullscreen .quick-edit,.fitted-app.screen-shot-full .quick-edit,.fitted-app.layout-edit .quick-edit,
+    .fitted-app.photo-mode .quick-edit{display:none!important;}
+    .fourth-row{position:relative;}
+    .fitted-app .fourth-row{grid-template-columns:repeat(var(--widget-count,1),minmax(0,1fr));}
+    .fourth-edit{position:absolute;top:-13px;right:10px;z-index:9;}
+    .setup-highlight{outline:2px solid var(--cc-ui-border,#a9c9ff);outline-offset:4px;border-radius:8px;}
+    .timer-buttons{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;}
+    .timer-buttons button{min-width:0;padding:9px 5px;font-size:clamp(12px,1.15vw,16px);}
+    .legacy-timer-actions[hidden]{display:none!important;}
+    /* New per-widget palette overrides, matching the overall theme choices. */
+    [data-color="light-green"]{background:linear-gradient(135deg,#214738,#396b52)!important;border-color:#7bbf9b!important;}
+    [data-color="vibrant-pink"]{background:linear-gradient(135deg,#5c1c4c,#8e3273)!important;border-color:#ec98cb!important;}
+    [data-color="orange"]{background:linear-gradient(135deg,#4e2d19,#875025)!important;border-color:#f4b77e!important;}
+    [data-color="yellow"]{background:linear-gradient(135deg,#534319,#78632a)!important;border-color:#f3d27b!important;}
+    [data-color="maroon"]{background:linear-gradient(135deg,#491b2b,#6c293b)!important;border-color:#cb8194!important;}
+    [data-color="sunset-gradient"]{background:linear-gradient(125deg,#48243c,#85505b,#ad6259)!important;border-color:#edab98!important;}
+    /* Special gradients, retained independently of Ultra Purple. */
+    .fitted-app[data-theme="sunset-gradient"]{background:linear-gradient(138deg,#2a1329 0%,#53314c 50%,#965351 100%);}
+    .fitted-app[data-theme="sunset-gradient"] .focus,.fitted-app[data-theme="sunset-gradient"] .timer-panel,
+    .fitted-app[data-theme="sunset-gradient"] .champs,.fitted-app[data-theme="sunset-gradient"] .fourth-row,
+    .fitted-app[data-theme="sunset-gradient"] .photo-sheet{background:linear-gradient(135deg,#432239,#69415a);}
+    .fitted-app[data-theme="sunset-gradient"] .dock{background:linear-gradient(95deg,rgba(54,26,49,.98),rgba(111,54,69,.98));}
+    /* On very small projectors keep the editable controls modest. */
+    @media(max-width:820px){.quick-edit{min-height:27px;min-width:27px;font-size:15px;}}
   </style>
 </head>
 <body>
@@ -451,13 +486,13 @@
   <main class="screen" id="screen">
     <div class="topline">
       <div class="brand-row">
-        <div class="brand-icon" aria-hidden="true">⌁</div>
-        <div><div class="kicker">Teaching dashboard</div><div class="appname">CLASS COMMAND <span style="font-size:.5em;color:#95b4d4;vertical-align:middle">Classic · Studio 1.4.1</span></div></div>
+        <button type="button" class="brand-icon brand-setup" id="openBrandSetup" title="Open Setup (works in fullscreen)" aria-label="Open Class Command Setup">⚙</button>
+        <div><div class="kicker">Teaching dashboard</div><div class="appname">CLASS COMMAND <span style="font-size:.5em;color:#95b4d4;vertical-align:middle">Classic · Studio 1.5</span></div></div>
       </div>
       <div class="meta"><div class="date-line" id="today"></div><div class="clock" id="clock"></div></div>
     </div>
     <div class="lesson-row" id="lessonRow">
-      <div style="min-width:0"><div class="lesson-title" id="lessonTitle"></div><div class="lesson-sub" id="lessonSub"></div></div>
+      <div class="lesson-headings" style="min-width:0"><div><div class="lesson-title" id="lessonTitle"></div><div class="lesson-sub" id="lessonSub"></div></div><button type="button" class="quick-edit" data-edit-section="setupTitleSection" title="Edit lesson title and subtitle" aria-label="Edit lesson title and subtitle">✎</button></div>
       <div class="lesson-picker-row"><label class="lesson-picker-label" for="lessonPicker">Saved lesson</label><select class="lesson-picker" id="lessonPicker" aria-label="Switch saved lesson"></select></div>
     </div>
     <section class="photo-sheet" id="photoSheet" aria-label="Full-lesson checklist" hidden>
@@ -465,29 +500,30 @@
       <div class="photo-list" id="photoList"></div>
     </section>
     <section class="agenda-section" id="agendaSection" aria-label="Lesson agenda">
-      <div class="section-label"><span>Lesson agenda · tap to jump</span><span id="progressLabel"></span></div>
+      <div class="section-label"><span>Lesson agenda · tap to jump <button type="button" class="quick-edit" data-edit-section="setupAgendaSection" title="Edit agenda" aria-label="Edit agenda">✎</button></span><span id="progressLabel"></span></div>
       <div class="agenda" id="agenda"></div>
     </section>
     <div class="stage">
       <section class="focus" aria-label="Current activity">
-        <div><div class="focus-top"><span class="focus-tag">● Now in progress</span><span class="focus-count" id="activityNumber"></span></div>
+        <div><div class="focus-top"><span class="focus-tag">● Now in progress</span><span class="focus-count" id="activityNumber"></span><button type="button" class="quick-edit" data-edit-section="setupAgendaSection" title="Edit activity" aria-label="Edit current activity">✎</button></div>
           <h1 class="focus-name" id="currentName"></h1><div class="focus-directions" id="currentDirections"></div></div>
         <div class="focus-footer" id="nextActivity"><div><span class="next-label">Up next</span><span class="next-name" id="nextName"></span></div><span style="color:#9eb6d7">→</span></div>
       </section>
       <section class="timer-panel" id="timerPanel" aria-label="Activity countdown timer">
-        <div class="timer-heading"><span>Activity timer</span><span class="timer-status" id="timerStatus">Ready</span></div>
+        <div class="timer-heading"><span>Activity timer</span><span class="timer-status" id="timerStatus">Ready</span><button type="button" class="quick-edit" data-edit-section="setupAgendaSection" title="Edit activity timer" aria-label="Edit activity timer preset">✎</button></div>
         <div class="digits" id="digits" role="timer" aria-label="Time remaining">10:00</div>
         <div class="timer-buttons">
+          <button class="softbtn" id="timerStart" type="button" aria-label="Start countdown">▶ Start</button>
+          <button class="softbtn" id="timerStop" type="button" aria-label="Stop countdown and keep remaining time">■ Stop</button>
           <button class="softbtn" id="timeMinus" data-time="-60" aria-label="Subtract one minute">−1 min</button>
           <button class="softbtn" id="timePlus" data-time="60" aria-label="Add one minute">+1 min</button>
-          <button class="softbtn" id="timePlusFive" data-time="300" aria-label="Add five minutes">+5 min</button>
-          <button class="softbtn" id="resetTimer" aria-label="Reset timer to activity preset">↺ Reset</button>
+          <span hidden class="legacy-timer-actions"><button class="softbtn" id="timePlusFive" data-time="300" aria-label="Add five minutes">+5 min</button><button class="softbtn" id="resetTimer" aria-label="Reset timer to activity preset">↺ Reset</button></span>
         </div>
       </section>
     </div>
     <section class="fourth-row" id="fourthRow" aria-label="Optional classroom widgets" hidden></section>
     <section class="champs" id="champsSection" aria-label="CHAMPS activity expectations">
-      <div class="champs-head"><div class="champs-title">CHAMPS <span style="font-weight:450;color:#8ea7c8">/ Current expectations</span></div><div class="champs-help">Tap a card to cycle its expectation</div></div>
+      <div class="champs-head"><div class="champs-title">CHAMPS <span style="font-weight:450;color:#8ea7c8">/ Current expectations</span> <button type="button" class="quick-edit" data-edit-section="setupAgendaSection" title="Edit CHAMPS expectations" aria-label="Edit CHAMPS expectations">✎</button></div><div class="champs-help">Tap a card to cycle its expectation</div></div>
       <div class="champs-grid" id="champsGrid"></div>
     </section>
   </main>
@@ -543,17 +579,31 @@
   <script>
     (function () {
       'use strict';
-      const RELEASE='Studio 1.4.1 · technology pictograms for each setting';
+      const RELEASE='Studio 1.5 · fullscreen, themes, timer and widgets';
       const KEY='class-command-v1-data';
       const LIB_KEY='class-command-classic-library-v2';
       const VIEW_KEY='class-command-classic-view';
       const MAX_LESSONS=80;
       const SIZE_KEYS=['title','subtitle','agenda','activity','directions','timer','champs','clock','widgets','photo','controls'];
       const SIZE_NAMES={title:'Class / lesson title',subtitle:'Unit / subtitle',agenda:'Agenda cards',activity:'Current activity title',directions:'Current activity directions',timer:'Countdown timer',champs:'CHAMPS cards',clock:'Clock and date',widgets:'Fourth-row widgets',photo:'Photo Mode directions',controls:'Teaching controls'};
-      const THEMES={midnight:['#0b1220','#162338','#1c2c43','#31435d','#a9c9ff'],forest:['#091d1d','#163631','#21453e','#44756a','#b5ead3'],ocean:['#0a1c2f','#133651','#1d4561','#396b8b','#a9d9ff'],sunset:['#231b27','#423044','#50394b','#8d6382','#ffc8a9'],rose:['#261729','#49293d','#563348','#94677f','#ffd0e2'], 'ultra-purple':['#190b30','#341651','#472269','#81539f','#ebc9ff']};
-      const THEME_LABELS={midnight:'Midnight Blue (Original)',forest:'Forest Green',ocean:'Ocean Blue',sunset:'Evening Sunset',rose:'Rosewood', 'ultra-purple':'Ultra Purple · tribute edition'};
-      const WIDGET_COLORS={theme:'Theme',purple:'Purple',teal:'Teal',green:'Green',rose:'Rose',amber:'Amber',cobalt:'Cobalt'};
-      const WIDGET_PALETTES={purple:['#1a102d','#322043','#4a2c60','#81569f','#e0b6ff'],teal:['#0d262b','#193a42','#25515a','#4c8392','#a9e9e8'],green:['#0c271e','#1c3e32','#285744','#4f8b71','#b8ebcb'],rose:['#291727','#46273e','#603953','#a36d91','#ffd0e6'],amber:['#2b2316','#463520','#65502d','#a98949','#ffe0a0'],cobalt:['#102044','#1d3161','#2c4a84','#5681bd','#c0dcff']};
+      const THEMES={
+        midnight:['#0b1220','#162338','#1c2c43','#31435d','#a9c9ff'],
+        forest:['#091d1d','#163631','#21453e','#44756a','#b5ead3'],
+        'light-green':['#11241d','#1c3e33','#2d5c4b','#659f80','#d0f9da'],
+        ocean:['#0a1c2f','#133651','#1d4561','#396b8b','#a9d9ff'],
+        sunset:['#231b27','#423044','#50394b','#8d6382','#ffc8a9'],
+        'sunset-gradient':['#291629','#482b41','#653953','#bd746b','#ffdfae'],
+        orange:['#241608','#3e2614','#57371e','#ae7243','#ffdab0'],
+        yellow:['#261f0e','#3d3217','#554620','#a48c40','#ffecab'],
+        maroon:['#1d0d15','#381725','#522636','#965366','#ffc0ce'],
+        rose:['#261729','#49293d','#563348','#94677f','#ffd0e2'],
+        'vibrant-pink':['#2c0e27','#551748','#77285d','#c5599b','#ffd2ee'],
+        'dusty-purple':['#1d1a2b','#342d45','#50445e','#86779c','#e6dafa'],
+        'ultra-purple':['#190b30','#341651','#472269','#81539f','#ebc9ff']
+      };
+      const THEME_LABELS={midnight:'Midnight Blue (Original)',forest:'Forest Green','light-green':'Soft Sage Green',ocean:'Ocean Blue',sunset:'Evening Sunset','sunset-gradient':'Sunset Gradient',orange:'Warm Orange',yellow:'Golden Yellow',maroon:'Deep Maroon',rose:'Dusty Pink (formerly Rosewood)','vibrant-pink':'Vibrant Pink','dusty-purple':'Dusty Purple', 'ultra-purple':'Ultra Purple · tribute edition'};
+      const WIDGET_COLORS={theme:'Theme',purple:'Dusty Purple',teal:'Teal',green:'Forest Green','light-green':'Soft Sage Green',rose:'Dusty Pink','vibrant-pink':'Vibrant Pink',amber:'Amber',orange:'Orange',yellow:'Golden Yellow',maroon:'Deep Maroon',cobalt:'Cobalt','sunset-gradient':'Sunset Gradient'};
+      const WIDGET_PALETTES={purple:['#1d1a2b','#342d45','#50445e','#86779c','#e6dafa'],teal:['#0d262b','#193a42','#25515a','#4c8392','#a9e9e8'],green:['#0c271e','#1c3e32','#285744','#4f8b71','#b8ebcb'],'light-green':THEMES['light-green'],rose:['#291727','#46273e','#603953','#a36d91','#ffd0e6'],'vibrant-pink':THEMES['vibrant-pink'],amber:['#2b2316','#463520','#65502d','#a98949','#ffe0a0'],orange:THEMES.orange,yellow:THEMES.yellow,maroon:THEMES.maroon,cobalt:['#102044','#1d3161','#2c4a84','#5681bd','#c0dcff'],'sunset-gradient':THEMES['sunset-gradient']};
       const DEFAULT_CHAMP_OPTIONS={help:[],move:[],participation:[],success:[]};
       const TECH_CHOICES=['Laptop closed','Laptop in your bag','Laptops out','Laptops & wired earbuds allowed'];
       const OLD_TECH_MAP={'Laptops closed':'Laptop closed','Laptops permitted':'Laptops out','Laptops + wired earbuds':'Laptops & wired earbuds allowed','No technology':'Laptop in your bag','Teacher directions only':'Laptop closed'};
@@ -589,8 +639,9 @@
       const makeStep=(name,directions,minutes,voice,help,move,participation,success,techStatus='Laptop closed')=>
         ({name,directions,minutes,voice,help,move,participation,success,techStatus});
       const DEFAULT_CONTROLS=()=>({
-        show:{prev:true,next:true,start:true,voice:true,stoplight:true,sizeDown:true,fit:true,sizeUp:true,photo:true,focus:true,png:true,fullscreen:true,
-              minus:true,plus:true,plusFive:true,reset:true},
+        version:2,
+        show:{prev:true,next:true,start:false,voice:false,stoplight:false,sizeDown:false,fit:false,sizeUp:false,photo:false,focus:false,png:true,fullscreen:true,
+              minus:false,plus:false,plusFive:false,reset:false},
         increments:{minus:1,plus:1,plusFive:5},
         labels:{prev:'← Previous',next:'Next activity →',photo:'☷ Photo Mode',focus:'Focus',png:'↓ PNG',fullscreen:'⛶ Full Screen'},
         order:['navigation','timer','voice','size','tools']
@@ -599,7 +650,11 @@
       const BUTTON_NAMES={prev:'Previous activity',next:'Next activity',start:'Start / Pause timer',voice:'Voice levels 0–4',stoplight:'Stoplight conversation colors',photo:'Photo Mode',sizeDown:'A− smaller',fit:'Auto-fit',sizeUp:'A+ larger',focus:'Focus mode',png:'Save PNG',fullscreen:'Full Screen',minus:'Subtract time',plus:'Add time',plusFive:'Add extra time',reset:'Reset timer'};
       function cleanControls(value){
         const base=DEFAULT_CONTROLS(),r=value&&typeof value==='object'?value:{};
-        for(const key of Object.keys(base.show))if(typeof (r.show||{})[key]==='boolean')base.show[key]=r.show[key];
+        // Upgrade the old *untouched* all-visible toolbar to the quieter Studio 1.5 defaults.
+        // Preserve deliberate custom toolbar selections from existing lessons.
+        const oldShow=r.show||{};
+        const oldAllVisible=r.version!==2&&Object.keys(base.show).every(key=>oldShow[key]===true);
+        if(!oldAllVisible){for(const key of Object.keys(base.show))if(typeof oldShow[key]==='boolean')base.show[key]=oldShow[key];}
         for(const key of Object.keys(base.increments))base.increments[key]=clamp(Math.round(Number((r.increments||{})[key])||base.increments[key]),1,30);
         for(const key of Object.keys(base.labels))if(typeof (r.labels||{})[key]==='string')base.labels[key]=r.labels[key].slice(0,26)||DEFAULT_CONTROLS().labels[key];
         const ord=Array.isArray(r.order)?r.order.filter(x=>Object.keys(GROUP_TITLES).includes(x)):[];
@@ -607,7 +662,7 @@
       }
       const SAMPLE=()=>({
         title:'U.S. Government',subtitle:'Unit 3 · State & Local Government',index:0,
-        settings:{autoStart:true,showAgenda:true,showChamps:true,showTimer:true,showClock:true,showNext:true,simple:false,autoFit:true,uiScale:1,controls:DEFAULT_CONTROLS(),...cleanStudioSettings(null)},
+        settings:{autoStart:false,showAgenda:true,showChamps:true,showTimer:true,showClock:true,showNext:true,simple:false,autoFit:true,uiScale:1,controls:DEFAULT_CONTROLS(),...cleanStudioSettings(null)},
         steps:[
           makeStep('Bellringer','Read the short excerpt. Answer the opening questions in your notebook.',10,0,'Raise your hand','Stay seated','Work independently','Get started right away','Laptop in your bag'),
           makeStep('Mini-Lesson','How does federalism divide government power? Follow along with the examples.',15,0,'Raise your hand','Stay seated','Listen and take notes','Show your thinking'),
@@ -693,14 +748,18 @@
         }else if(data.settings.autoFit){
           // Choose the largest comfortable scale with the entire dashboard visible.
           // Wider logical layout at smaller scales can also keep CHAMPS on one row.
-          for(let n=100;n>=50;n-=2){
+          for(let n=100;n>=35;n-=2){
             const scale=n/100;
             applyViewportScale(scale,view);
             const main=el('screen');
             const toolbar=document.querySelector('.dock');
-            if(main.scrollHeight<=view.height/scale+1.5 &&
-               main.scrollWidth<=view.width/scale+1.5 &&
-               (toolbarHidden||toolbar.scrollWidth<=view.width/scale+1.5)){break;}
+            const toolbarVisible=!toolbarHidden&&!presentationMode&&getComputedStyle(toolbar).display!=='none';
+            const visibleSections=['lessonRow','agendaSection','timerPanel','fourthRow','champsSection','photoSheet']
+              .map(el).concat([document.querySelector('.focus')]).filter(node=>node&&!node.hidden&&node.getClientRects().length&&getComputedStyle(node).display!=='none');
+            const contentBottom=Math.max(0,...visibleSections.map(node=>node.getBoundingClientRect().bottom));
+            const safeBottom=toolbarVisible?toolbar.getBoundingClientRect().top-7:view.height-(toolbarHidden?46:12);
+            if(main.scrollHeight<=view.height/scale+1.5 && main.scrollWidth<=view.width/scale+1.5 &&
+               (!toolbarVisible||toolbar.scrollWidth<=view.width/scale+1.5) && contentBottom<=safeBottom){break;}
           }
         }else{
           applyViewportScale(clamp(data.settings.uiScale,.6,1.15),view);
@@ -857,10 +916,13 @@
       }
       function tick(){if(timer.running&&secondsLeft()<=0){timer.running=false;timer.seconds=0;timer.endsAt=null;persist();soundBell();notice('Time is up!')}renderTimer();}
       function formatTime(s){s=Math.max(0,Math.ceil(s));return `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`}
-      function renderTimer(){const s=secondsLeft();el('digits').textContent=formatTime(s);el('digits').classList.toggle('finished',s===0);el('timerStatus').textContent=timer.running?'Running':s===0?'Time is up':'Paused / ready';el('timerStatus').classList.toggle('finished',s===0);el('toggleTimer').textContent=timer.running?'Ⅱ Pause':'▶ Start';
+      function renderTimer(){const s=secondsLeft();
+        el('timerStart').disabled=!!timer.running;
+        el('timerStop').disabled=!timer.running;
+        el('digits').textContent=formatTime(s);el('digits').classList.toggle('finished',s===0);el('timerStatus').textContent=timer.running?'Running':s===0?'Time is up':'Paused / ready';el('timerStatus').classList.toggle('finished',s===0);el('toggleTimer').textContent=timer.running?'■ Stop':'▶ Start';
         const quickTime=el('quickTimerRemaining'),quickButton=document.querySelector('[data-quick="timer"]');
         if(quickTime)quickTime.textContent=formatTime(s);
-        if(quickButton)quickButton.textContent=timer.running?'Ⅱ Pause':'▶ Start';}
+        if(quickButton)quickButton.textContent=timer.running?'■ Stop':'▶ Start';}
       function renderClock(){const now=new Date();el('clock').textContent=new Intl.DateTimeFormat('en-US',{hour:'numeric',minute:'2-digit'}).format(now);el('today').textContent=new Intl.DateTimeFormat('en-US',{weekday:'short',month:'short',day:'numeric'}).format(now);}
       function conversationLabel(i){return data.settings.conversationLabels[i]||CONVERSATIONS[i];}
       function optionsFor(key){
@@ -899,7 +961,9 @@
           parts.push(`<div class="widget-card widget-tech-card"><div class="widget-label">Technology · seatbelt sign</div><button class="widget-tech" id="cycleTechStatus" data-tech="${key}" aria-label="Technology status: ${escapeHTML(status)}. Tap to cycle to the next status." type="button"><span class="seatbelt-icon">${sign}</span><span class="tech-copy">${escapeHTML(status)}<span class="tech-hint">Tap sign to change expectation</span></span></button></div>`);
         }
         el('fourthRow').hidden=parts.length===0;
-        el('fourthRow').innerHTML=parts.join('');
+        el('fourthRow').style.setProperty('--widget-count',String(Math.max(1,parts.length)));
+        el('fourthRow').dataset.widgetCount=String(parts.length);
+        el('fourthRow').innerHTML=parts.join('')+(parts.length?'<button type="button" class="quick-edit fourth-edit" data-edit-section="setupWidgetsSection" title="Edit fourth-row widgets" aria-label="Edit fourth-row widgets">✎</button>':'');
       }
       function blendHex(base,accent,part){
         const b=base.replace('#',''),a=accent.replace('#','');
@@ -943,7 +1007,7 @@
       function renderControls(){
         const c=data.settings.controls;
         const show={prev:'prevStep',next:'nextStep',start:'toggleTimer',sizeDown:'sizeDown',fit:'fitScreen',sizeUp:'sizeUp',
-          photo:'photoToggle',focus:'focusToggle',png:'savePng',fullscreen:'fullScreenBtn',minus:'timeMinus',plus:'timePlus',plusFive:'timePlusFive',reset:'resetTimer'};
+          photo:'photoToggle',focus:'focusToggle',png:'savePng',fullscreen:'fullScreenBtn'};
         for(const [key,id] of Object.entries(show))el(id).style.display=c.show[key]?'':'none';
         document.querySelector('[data-toolbar-group="voice"]').style.display=(c.show.voice||c.show.stoplight)?'':'none';
         el('stoplightToggle').style.display=c.show.stoplight?'':'none';
@@ -956,7 +1020,7 @@
         }
         c.order.forEach((name,i)=>document.querySelector(`[data-toolbar-group="${name}"]`).style.order=i);
         for(const [key,id,prefix] of [['minus','timeMinus','−'],['plus','timePlus','+'],['plusFive','timePlusFive','+']]){
-          const minutes=c.increments[key],b=el(id);b.dataset.time=String(minutes*60*(key==='minus'?-1:1));
+          const minutes=key==='plusFive'?c.increments[key]:1,b=el(id);b.dataset.time=String(minutes*60*(key==='minus'?-1:1));
           b.textContent=prefix+minutes+' min';b.setAttribute('aria-label',`${key==='minus'?'Subtract':'Add'} ${minutes} minutes`);
         }
         el('prevStep').textContent=c.labels.prev;
@@ -967,26 +1031,34 @@
         el('fullScreenBtn').textContent=(document.fullscreenElement||document.webkitFullscreenElement||presentationMode)?'↙ Exit Full Screen':c.labels.fullscreen;
         el('fullScreenBtn').setAttribute('aria-pressed',String(!!(document.fullscreenElement||document.webkitFullscreenElement||presentationMode)));
       }
+      function updateFullscreenUI(){
+        const full=!!(document.fullscreenElement||document.webkitFullscreenElement||presentationMode);
+        el('fittedApp').classList.toggle('is-fullscreen',full);
+        renderControls();requestFit();
+      }
       function updatePresentation(){
         el('fittedApp').classList.toggle('screen-shot-full',presentationMode);
-        renderControls();requestFit();
+        updateFullscreenUI();
       }
       async function fullScreen(){
         if(presentationMode){presentationMode=false;updatePresentation();notice('Controls restored');return;}
         if(document.fullscreenElement||document.webkitFullscreenElement){
           try{await (document.exitFullscreen?document.exitFullscreen():document.webkitExitFullscreen());}catch(e){notice('Could not exit full screen');}return;
         }
-        const root=el('fittedApp');
+        const host=document.documentElement; // Includes Setup drawer and teaching board.
         try{
-          if(root.requestFullscreen)await root.requestFullscreen({navigationUI:'hide'});
-          else if(root.webkitRequestFullscreen)await root.webkitRequestFullscreen();
+          if(host.requestFullscreen)await host.requestFullscreen({navigationUI:'hide'});
+          else if(host.webkitRequestFullscreen)await host.webkitRequestFullscreen();
           else throw new Error('Full Screen API unavailable');
-          notice('Full screen enabled');
+          // A fullscreen display should ALWAYS refit, even if manual sizing was used before.
+          data.settings.autoFit=true;persist();updateFullscreenUI();
+          requestAnimationFrame(()=>requestAnimationFrame(requestFit));
+          notice('Full screen enabled · tap the gear beside Class Command for Setup');
         }catch(e){
           // iPad Safari may block the Fullscreen API for HTML elements.
           // Provide a reversible, genuinely useful display-only mode instead.
-          presentationMode=true;updatePresentation();
-          notice('Presentation view · exit button at bottom right');
+          presentationMode=true;data.settings.autoFit=true;persist();updatePresentation();
+          notice('Presentation view · Setup gear remains at top left');
         }
       }
       function panelElement(name){return {agenda:el('agendaSection'),focus:document.querySelector('.focus'),timer:el('timerPanel'),fourth:el('fourthRow'),champs:el('champsSection')}[name];}
@@ -1076,7 +1148,17 @@
         applyAppearance();renderWidgets();renderPhotoList();renderAgenda();renderChamps();renderTimer();renderClock();applyWindowLayout();requestFit();}
       function chooseStep(index){index=clamp(index,0,data.steps.length-1);if(index===data.index)return;unlockBellAudio();data.index=index;timer={seconds:current().minutes*60,running:!!data.settings.autoStart,endsAt:data.settings.autoStart?Date.now()+current().minutes*60000:null};persist();renderScreen();notice(current().name);}
       function adjustTime(change){const n=clamp(secondsLeft()+change,0,10800);timer.seconds=n;if(timer.running){timer.endsAt=Date.now()+n*1000;if(n===0){timer.running=false;timer.endsAt=null}}persist();renderTimer();}
-      function toggleTimer(){unlockBellAudio();if(timer.running){timer.seconds=secondsLeft();timer.running=false;timer.endsAt=null;}else {if(secondsLeft()===0)timer.seconds=current().minutes*60;timer.running=true;timer.endsAt=Date.now()+timer.seconds*1000;}persist();renderTimer();}
+      function toggleTimer(){unlockBellAudio();if(timer.running){stopTimer();return;}startTimer();}
+      function startTimer(){unlockBellAudio();if(timer.running)return;if(secondsLeft()===0)timer.seconds=current().minutes*60;
+        timer.running=true;timer.endsAt=Date.now()+timer.seconds*1000;persist();renderTimer();}
+      function stopTimer(){if(!timer.running)return;timer.seconds=secondsLeft();timer.running=false;timer.endsAt=null;persist();renderTimer();}
+      function adjustTimerForEditedPreset(oldMinutes,newMinutes){
+        if(timer.running){const remaining=clamp(secondsLeft()+(newMinutes-oldMinutes)*60,0,10800);
+          timer.seconds=remaining;timer.endsAt=remaining?Date.now()+remaining*1000:null;
+          if(!remaining)timer.running=false;
+        }else{timer.seconds=newMinutes*60;timer.endsAt=null;}
+        renderTimer();
+      }
       function resetTimer(){timer.seconds=current().minutes*60;timer.running=false;timer.endsAt=null;persist();renderTimer();notice('Timer reset to '+current().minutes+' minutes');}
       function setVoice(v){current().voice=clamp(v,0,4);persist();renderChamps();notice('Conversation: Level '+current().voice);}
       function cycle(key){if(key==='none')return;if(key==='voice'){setVoice((current().voice+1)%5);return;}const opts=optionsFor(key);if(!opts)return;const pos=opts.indexOf(current()[key]);current()[key]=opts[(pos+1)%opts.length];persist();renderChamps();notice(current()[key]);}
@@ -1247,21 +1329,21 @@
       function customChampBox(key,label){return `<label class="fieldwrap" style="display:block"><span class="form-label">${label} · additional choices (one per line)</span><textarea class="field" data-champoptions="${key}" rows="3" maxlength="3100" placeholder="Type one option per line">${escapeHTML(data.settings.champOptions[key].join('\n'))}</textarea></label>`;}
       function renderEditor(){const body=el('drawerBody'),scroll=body.scrollTop,record=activeRecord(),st=data.settings;
         body.innerHTML=`
-        <div class="save-hint" style="margin-top:0;margin-bottom:6px">Running Class Command · Studio 1.4 · Theme polish + optional bell</div>
-        <div class="form-section" style="margin-top:0">1. Lesson Library</div>
+        <div class="save-hint" style="margin-top:0;margin-bottom:6px">Running Class Command · Studio 1.5 · Classroom usability update</div>
+        <div class="form-section" id="setupLibrarySection" style="margin-top:0">1. Lesson Library</div>
         <div class="lesson-library-box"><span class="library-count">${library.lessons.length} saved lessons · select one to edit or display</span>
         <label class="fieldwrap" style="display:block"><span class="form-label">Saved lesson</span><select class="field" id="libraryPicker">${library.lessons.map(x=>`<option value="${escapeHTML(x.id)}" ${x.id===library.activeId?'selected':''}>${escapeHTML((x.date?x.date+' · ':'')+x.label)}</option>`).join('')}</select></label>
         <div class="fieldrow"><label class="fieldwrap"><span class="form-label">Library name</span><input class="field" maxlength="80" data-library="label" value="${escapeHTML(record.label)}" placeholder="3rd Block — Lesson 2.5"></label>
         <label class="fieldwrap"><span class="form-label">Lesson date (optional)</span><input class="field" type="date" data-library="date" value="${escapeHTML(record.date)}"></label></div>
         <div class="addrow"><button class="softbtn" id="addLesson">+ New lesson</button><button class="softbtn" id="duplicateLesson">Duplicate</button><button class="minibtn danger" id="deleteLesson">Delete selected</button></div></div>
-        <div class="form-section">2. Class / Lesson Title</div>
+        <div class="form-section" id="setupTitleSection">2. Class / Lesson Title</div>
         <label class="fieldwrap" style="display:block"><span class="form-label">Title shown on the board</span><input class="field" data-general="title" maxlength="90" value="${escapeHTML(data.title)}"></label>
-        <div class="form-section">3. Unit or Subtitle</div>
+        <div class="form-section" id="setupSubtitleSection">3. Unit or Subtitle</div>
         <label class="fieldwrap" style="display:block"><span class="form-label">Subtitle shown below the title</span><input class="field" data-general="subtitle" maxlength="150" value="${escapeHTML(data.subtitle)}"></label>
-        <div class="form-section">4. Lesson Agenda</div><p class="form-subtitle">Each activity has its own CHAMPS dropdowns. Photo Mode uses the full directions for every activity.</p>
+        <div class="form-section" id="setupAgendaSection">4. Lesson Agenda</div><p class="form-subtitle">Each activity has its own CHAMPS dropdowns. Photo Mode uses the full directions for every activity.</p>
         <div id="editorSteps">${data.steps.map(editorStep).join('')}</div>
         <div class="addrow"><button class="softbtn" data-add="custom">+ Blank activity</button><button class="softbtn" data-add="group">+ Group discussion</button><button class="softbtn" data-add="individual">+ Independent work</button></div>
-        <div class="form-section">5. Fourth Row Widgets &amp; Stoplight Colors</div>
+        <div class="form-section" id="setupWidgetsSection">5. Fourth Row Widgets &amp; Stoplight Colors</div>
         <p class="form-subtitle">Optional widgets appear between the activity and CHAMPS sections. All are off by default so the original screen still fits.</p>
         <label class="checkrow"><input type="checkbox" data-stoplight ${st.stoplight?'checked':''}>Enable conversation stoplight colors (independent of the Colors toolbar shortcut)</label>
         <label class="checkrow"><input type="checkbox" data-widget="target" ${st.widgets.target?'checked':''}>Show learning target</label>
@@ -1271,7 +1353,7 @@
         <label class="checkrow"><input type="checkbox" data-widget="tech" ${st.widgets.tech?'checked':''}>Show technology status</label>
         <p class="save-hint">The illuminated seatbelt-style sign automatically follows the current activity. Set each activity's default under Lesson Agenda, or tap the sign during class to change only that activity.</p>
         <label class="fieldwrap" style="display:block"><span class="form-label">Current activity · technology override</span><select class="field" data-currenttech>${templateOptions(TECH_CHOICES,current().techStatus)}</select></label>
-        <div class="form-section">6. Quick Presentation Options</div>
+        <div class="form-section" id="setupQuickSection">6. Quick Presentation Options</div>
         <details class="settings-details" data-panel="liveActions" ${editorPanelState.liveActions?'open':''}>
           <summary>Live controls · always available in Setup</summary><div class="control-fields">
           <p class="setup-live-help">These are the actual controls, not visibility settings. They keep working even if their shortcuts are hidden from the bottom bar. Use Customize Buttons to decide only what appears on the bar.</p>
@@ -1284,7 +1366,7 @@
             <div class="setup-live-buttons"><button type="button" class="minibtn" data-quick="prev" ${data.index===0?'disabled':''}>← Previous</button><button type="button" class="minibtn" data-quick="next" ${data.index===data.steps.length-1?'disabled':''}>Next →</button></div>
           </div>
           <div class="setup-live-group"><div class="setup-live-head">Timer</div><div class="setup-live-buttons">
-            <button type="button" class="softbtn" data-quick="timer">${timer.running?'Ⅱ Pause':'▶ Start'}</button>
+            <button type="button" class="softbtn" data-quick="timer">${timer.running?'■ Stop':'▶ Start'}</button>
             <button type="button" class="minibtn" data-quick="minus">−${st.controls.increments.minus} min</button>
             <button type="button" class="minibtn" data-quick="plus">+${st.controls.increments.plus} min</button>
             <button type="button" class="minibtn" data-quick="plusFive">+${st.controls.increments.plusFive} min</button>
@@ -1306,7 +1388,7 @@
         </div></details>
         <label class="checkrow"><input type="checkbox" data-appearance="photoMode" ${photoMode?'checked':''}>Show all-directions Photo Mode now</label>
         <label class="checkrow"><input type="checkbox" data-appearance="toolbarHidden" ${toolbarHidden?'checked':''}>Keep bottom controls collapsed</label>
-        <label class="checkrow"><input type="checkbox" data-setting="autoStart" ${st.autoStart?'checked':''}>Auto-start the timer when changing activities</label>
+        <label class="checkrow"><input type="checkbox" data-setting="autoStart" ${st.autoStart?'checked':''}>Automatically start the next activity timer (otherwise press Start)</label>
         <div class="setup-live-group"><div class="setup-live-head">Timer bell</div>
           <label class="checkrow"><input type="checkbox" data-setting="bellEnabled" ${st.bellEnabled?'checked':''}>Play a gentle bell at 00:00</label>
           <div class="fieldrow" style="align-items:end"><label class="fieldwrap"><span class="form-label">Bell volume</span>
@@ -1316,7 +1398,7 @@
         </div>
         <div class="fieldrow"><div><label class="checkrow"><input type="checkbox" data-setting="showAgenda" ${st.showAgenda?'checked':''}>Show agenda</label><label class="checkrow"><input type="checkbox" data-setting="showChamps" ${st.showChamps?'checked':''}>Show CHAMPS</label><label class="checkrow"><input type="checkbox" data-setting="showNext" ${st.showNext?'checked':''}>Show next activity</label></div><div><label class="checkrow"><input type="checkbox" data-setting="showTimer" ${st.showTimer?'checked':''}>Show timer</label><label class="checkrow"><input type="checkbox" data-setting="showClock" ${st.showClock?'checked':''}>Show clock</label></div></div>
         <label class="fieldwrap" style="display:block"><span class="form-label">Save PNG as</span><select class="field" data-pngmode><option value="checklist" ${st.pngMode==='checklist'?'selected':''}>Photo Mode checklist · all directions (recommended)</option><option value="live" ${st.pngMode==='live'?'selected':''}>Classic live board · current directions only</option></select></label>
-        <div class="form-section">7. Customization</div>
+        <div class="form-section" id="setupCustomizationSection">7. Customization</div>
         <details class="settings-details" data-panel="theme" ${editorPanelState.theme?'open':''}><summary>Theme</summary><div class="control-fields">
           <label class="fieldwrap" style="display:block"><span class="form-label">Overall color theme</span><select class="field" data-theme>${themeOptions(st.theme)}</select></label>
           <p class="save-hint">Ultra Purple uses a special layered purple gradient to honor the encouragement that helped this project grow.</p>
@@ -1351,19 +1433,27 @@
           <div class="addrow"><button class="minibtn" id="resetControls">Restore default buttons</button></div>
         </div></details>
         <details class="settings-details" data-panel="timer" ${editorPanelState.timer?'open':''}><summary>Timer Buttons</summary><div class="control-fields">
-          ${[['minus','Subtract time'],['plus','Add time'],['plusFive','Add extra time']].map(([key,label])=>`<div class="fieldrow" style="align-items:center"><label class="checkrow"><input type="checkbox" data-control="${key}" ${st.controls.show[key]?'checked':''}>Show ${label} button</label><label class="fieldwrap"><span class="form-label">Minutes</span><input class="field" type="number" min="1" max="30" data-increment="${key}" value="${st.controls.increments[key]}"></label></div>`).join('')}
+          <p class="save-hint">The classroom timer always shows Start, Stop, −1 minute, and +1 minute. Stop preserves the remaining time. Extra time and Reset remain available in Quick Presentation Options → Live Controls.</p>
+          <label class="fieldwrap"><span class="form-label">Extra time added by Setup's + button (minutes)</span><input class="field" type="number" min="1" max="30" data-increment="plusFive" value="${st.controls.increments.plusFive}"></label>
           <label class="checkrow"><input type="checkbox" data-control="reset" ${st.controls.show.reset?'checked':''}>Show timer reset</label></div></details>
         <details class="settings-details" data-panel="labels" ${editorPanelState.labels?'open':''}><summary>Button Labels</summary><div class="control-fields">
           ${[['prev','Previous activity'],['next','Next activity'],['photo','Photo Mode'],['focus','Focus mode'],['png','PNG export'],['fullscreen','Full Screen']].map(([key,label])=>`<label class="fieldwrap" style="display:block"><span class="form-label">${label}</span><input class="field" maxlength="26" data-buttonlabel="${key}" value="${escapeHTML(st.controls.labels[key])}"></label>`).join('')}
         </div></details>
-        <div class="form-section">8. Backups and Starting Over</div>
+        <div class="form-section" id="setupBackupsSection">8. Backups and Starting Over</div>
         <div class="addrow"><button class="softbtn" id="exportAll">↓ Export ALL lessons</button><button class="softbtn" id="importAll">↑ Import ALL lessons</button></div>
         <div class="addrow"><button class="minibtn" id="exportJson">Export selected lesson</button><button class="minibtn" id="importJson">Import into selected lesson</button><button class="minibtn" id="resetSample">Load demo into selected lesson</button></div>
         <p class="save-hint">All changes still save only in this browser. Export all lessons before upgrading or clearing browser data. Importing a full library replaces what's on the device. Do not enter student information.</p>`;
         body.scrollTop=scroll;
       }
       function openEditor(){renderEditor();el('glass').classList.add('open');el('glass').setAttribute('aria-hidden','false');el('closeSetupTop').focus();}
-      function closeEditor(){el('glass').classList.remove('open');el('glass').setAttribute('aria-hidden','true');(toolbarHidden?el('showDock'):el('openSetup')).focus();}
+      function openEditorAt(section){
+        openEditor();
+        requestAnimationFrame(()=>{const target=el(section);if(!target)return;
+          target.scrollIntoView({block:'start',behavior:'instant'});
+          target.classList.add('setup-highlight');setTimeout(()=>target.classList.remove('setup-highlight'),1400);
+        });
+      }
+      function closeEditor(){el('glass').classList.remove('open');el('glass').setAttribute('aria-hidden','true');(presentationMode?el('openBrandSetup'):toolbarHidden?el('showDock'):el('openSetup')).focus();}
       function addStep(type){if(data.steps.length>=30){notice('30 activities is the limit');return;}const presets={
         custom:makeStep('New activity','Enter directions in Setup.',10,1,HELP[0],MOVE[0],PARTICIPATION[0],SUCCESS[0]),
         group:makeStep('Table Discussion','Talk through the prompt with your group. Be ready to share.',12,2,HELP[1],MOVE[1],PARTICIPATION[1],SUCCESS[2]),
@@ -1387,7 +1477,10 @@
         persist();renderWidgets();requestFit();notice(current().techStatus);});
       el('agenda').addEventListener('click',e=>{const t=e.target.closest('[data-step]');if(t)chooseStep(Number(t.dataset.step));});
       document.querySelectorAll('[data-time]').forEach(b=>b.addEventListener('click',()=>adjustTime(Number(b.dataset.time))));
-      el('toggleTimer').addEventListener('click',toggleTimer);el('resetTimer').addEventListener('click',resetTimer);
+      el('toggleTimer').addEventListener('click',toggleTimer);
+      el('timerStart').addEventListener('click',startTimer);
+      el('timerStop').addEventListener('click',stopTimer);
+      el('resetTimer').addEventListener('click',resetTimer);
       el('nextStep').addEventListener('click',()=>chooseStep(data.index+1));el('prevStep').addEventListener('click',()=>chooseStep(data.index-1));
       document.querySelectorAll('[data-voice]').forEach(b=>b.addEventListener('click',()=>setVoice(Number(b.dataset.voice))));
       el('champsGrid').addEventListener('click',e=>{const b=e.target.closest('[data-champ]');if(b)cycle(b.dataset.champ);});
@@ -1402,8 +1495,8 @@
       el('stoplightToggle').addEventListener('click',()=>setStoplight(!data.settings.stoplight));
       el('fullScreenBtn').addEventListener('click',fullScreen);
       el('exitPresentation').addEventListener('click',()=>{presentationMode=false;updatePresentation();});
-      document.addEventListener('fullscreenchange',()=>{renderControls();requestFit();});
-      document.addEventListener('webkitfullscreenchange',()=>{renderControls();requestFit();});
+      document.addEventListener('fullscreenchange',()=>{updateFullscreenUI();requestAnimationFrame(()=>requestAnimationFrame(requestFit));});
+      document.addEventListener('webkitfullscreenchange',()=>{updateFullscreenUI();requestAnimationFrame(()=>requestAnimationFrame(requestFit));});
       el('hideDock').addEventListener('click',()=>{setToolbarHidden(true);notice('Tap Show controls to reopen');});
       el('showDock').addEventListener('click',()=>setToolbarHidden(false));
       el('lessonPicker').addEventListener('change',e=>chooseLesson(e.target.value));
@@ -1414,7 +1507,11 @@
       window.addEventListener('orientationchange',requestFit);
       if(window.visualViewport)window.visualViewport.addEventListener('resize',requestFit);
 
-      el('openSetup').addEventListener('click',openEditor);el('closeSetup').addEventListener('click',closeEditor);el('closeSetupTop').addEventListener('click',closeEditor);
+      el('openSetup').addEventListener('click',openEditor);
+      el('openBrandSetup').addEventListener('click',openEditor);
+      el('fittedApp').addEventListener('click',e=>{const pencil=e.target.closest('[data-edit-section]');
+        if(pencil&&!arranging){e.stopPropagation();openEditorAt(pencil.dataset.editSection);}
+      });el('closeSetup').addEventListener('click',closeEditor);el('closeSetupTop').addEventListener('click',closeEditor);
       el('glass').addEventListener('click',e=>{if(e.target===el('glass'))closeEditor()});
       document.addEventListener('keydown',e=>{if(e.key==='Escape'&&el('glass').classList.contains('open'))closeEditor();});
       el('drawerBody').addEventListener('input',e=>{const t=e.target;
@@ -1431,7 +1528,12 @@
         if(t.dataset.conversationLabel!==undefined){const i=Number(t.dataset.conversationLabel);if(i>=0&&i<=4){data.settings.conversationLabels[i]=t.value.slice(0,120)||CONVERSATIONS[i];persist();renderScreen();}return;}
         if(t.dataset.general){data[t.dataset.general]=t.value.slice(0,t.maxLength>0?t.maxLength:150);persist();renderScreen();}
         else if(t.dataset.stepfield){const idx=Number(t.dataset.index),f=t.dataset.stepfield;if(!data.steps[idx])return;
-          if(f==='minutes'){if(t.value===''||!Number.isFinite(Number(t.value)))return;data.steps[idx].minutes=clamp(Math.round(Number(t.value)),1,180)}
+          if(f==='minutes'){
+            if(t.value===''||!Number.isFinite(Number(t.value)))return;
+            const before=data.steps[idx].minutes,after=clamp(Math.round(Number(t.value)),1,180);
+            data.steps[idx].minutes=after;
+            if(idx===data.index&&before!==after)adjustTimerForEditedPreset(before,after);
+          }
           else if(f==='voice')data.steps[idx].voice=clamp(Number(t.value),0,4);
           else data.steps[idx][f]=t.value;
           persist();renderScreen();
